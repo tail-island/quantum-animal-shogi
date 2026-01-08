@@ -258,15 +258,15 @@ impl Game {
     // 次のステートを取得します。
 
     pub fn next_state(state: &State, action: (u8, u8)) -> (State, f32) {
+        let mut result = state.clone();
+
         // 合法手であることをチェックします。
 
         if !Game::legal_actions(&state).contains(&action) {
-            return (state.clone(), -1.0);
+            return (result, -1.0);
         }
 
         // 次のステートを取得します。
-
-        let mut result = state.clone();
 
         if action.0 < 4 * 3 {
             // 駒を指すアクションを実行します。

@@ -3,14 +3,14 @@ from functools import lru_cache
 from gymnasium.spaces import Box, Dict, Discrete, MultiBinary
 from pettingzoo import AECEnv
 
-from .quantum_animal_shogi import _Environment
+from .quantum_animal_shogi import RawEnvironment
 
 
 class Environment(AECEnv):
     metadata = {"render_modes": ["human"], "name": "quantum-animal-shogi"}
 
     def __init__(self, render_mode=None):
-        self.env = _Environment()
+        self.raw_env = RawEnvironment()
 
         self.render_mode = render_mode
         self.possible_agents = ["player_0", "player_1"]
@@ -24,23 +24,23 @@ class Environment(AECEnv):
 
     @lru_cache(maxsize=None)
     def observation_space(self, agent):
-        return Dict({"observation": Box(low=0, high=1, shape=[4 * 3 + 8, (5 + 2) * 2]), "action_mask": MultiBinary((4 * 3 + 8) * (4 * 3))})
+        return Dict({"observation": Box(low=0, high=1, shape=[4 * 3 + 8, 5 + 2 + 2]), "action_mask": MultiBinary((4 * 3 + 8) * (4 * 3))})
 
     def observe(self, agent):
         return self.observations[agent]
 
     def render(self):
-        print(self.env)
+        print(self.raw_env)
         print()
 
     def reset(self, seed=None, options=None):
-        self.env.reset()
+        self.raw_env.reset()
 
         self.agents = copy(self.possible_agents)
         self.agent_selection = self.agents[0]
 
         self.observations = dict([
-            (self.agents[0], self.env.observe()),
+            (self.agents[0], self.raw_env.observe()),
             (self.agents[1], None)
         ])
         self.rewards = dict(map(lambda agent: (agent, 0), self.agents))
@@ -54,18 +54,20 @@ class Environment(AECEnv):
             self._was_dead_step(action)
             return
 
-        reward = self.env.step(action)
+        reward = self.raw_env.step(action)
 
-        if reward != 0:
+        if reward != 0:  # 勝敗が決定した場合。
+            self.observations[self.agents[(self.agents.index(self.agent_selection) + 0) % 2]] = self.raw_env.observe_turned()
+
             self.rewards[self.agents[(self.agents.index(self.agent_selection) + 0) % 2]] =  reward  # noqa: E222
             self.rewards[self.agents[(self.agents.index(self.agent_selection) + 1) % 2]] = -reward
 
             self.terminations[self.agents[(self.agents.index(self.agent_selection) + 0) % 2]] = True
             self.terminations[self.agents[(self.agents.index(self.agent_selection) + 1) % 2]] = True
 
-        self.observations[self.agents[(self.agents.index(self.agent_selection) + 1) % 2]] = self.env.observe()
-        self._accumulate_rewards()
+        self.observations[self.agents[(self.agents.index(self.agent_selection) + 1) % 2]] = self.raw_env.observe()
 
+        self._accumulate_rewards()
         self.agent_selection = self.agents[(self.agents.index(self.agent_selection) + 1) % 2]
 
         if self.render_mode == "human":

@@ -8,23 +8,115 @@ mod quantum_animal_shogi {
 
     use crate::{Game, State, bits};
 
+    fn observation<'py>(state: &State, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let result = PyDict::new(py);
+
+        result.set_item(
+            "observation",
+            {
+                let mut result = Array2::<f32>::zeros((4 * 3 + 8, 5 + 2 + 2));  // [行(4)×列（3）＋持ち駒（自分と敵合わせて8）、駒種（ひよこ、きりん、ぞう、ライオン、にわとり）＋由来（先手、後手））＋所有者（自分、敵）]。
+
+                // 盤面。
+
+                for index in 0..8_usize {
+                    let bit_board = state.bit_boards[index];
+
+                    if bit_board == 0 {
+                        continue;
+                    }
+
+                    let i = (4 * 3 - 1 - bit_board.trailing_zeros()) as usize;
+
+                    for piece_bit in bits(state.pieces[index]) {
+                        result[[i, piece_bit]] = 1.0;
+                    }
+
+                    result[[i, 5 + if (0..4).contains(&index) { 0 } else { 1 }]] = 1.0;
+                    result[[i, 5 + 2 + if state.ownership & 1 << index != 0 { 0 } else { 1 }]] = 1.0;
+                }
+
+                // 自分の持ち駒。
+
+                for (i, index) in bits(state.ownership).filter(|index| state.bit_boards[*index] == 0).enumerate().map(|(i, index)| (4 * 3 + i, index)) {
+                    for piece_bit in bits(state.pieces[index]) {
+                        result[[i, piece_bit]] = 1.0;
+                    }
+
+                    result[[i, 5 + if (0..4).contains(&index) { 0 } else { 1 }]] = 1.0;
+                    result[[i, 5 + 2 + 0]] = 1.0;
+                }
+
+                // 敵の持ち駒。
+
+                for (i, index) in bits(!state.ownership).filter(|index| state.bit_boards[*index] == 0).enumerate().map(|(i, index)| (4 * 3 + 8 - 1 - i, index)) {
+                    for piece_bit in bits(state.pieces[index]) {
+                        result[[i, piece_bit]] = 1.0;
+                    }
+
+                    result[[i, 5 + if (0..4).contains(&index) { 0 } else { 1 }]] = 1.0;
+                    result[[i, 5 + 2 + 1]] = 1.0;
+                }
+
+                result.into_pyarray(py)
+            }
+        )?;
+
+        // 合法手。
+
+        result.set_item(
+            "action_mask",
+            {
+                let mut result = Array1::<i8>::zeros(((4 * 3) + 8) * (4 * 3));
+
+                for action in Game::legal_actions(&state) {
+                    // Python側の座標系（Rust側では0は盤面の右下ですが、Python側では左上）に合うように、アクションを変更します。
+
+                    let action = {
+                        if action.0 < 4 * 3 {
+                            (12 - 1 - action.0, 12 - 1 - action.1)
+                        } else {
+                            (action.0, 12 - 1 - action.1)
+                        }
+                    };
+
+                    result[(action.0 as usize) * (4 * 3) + (action.1 as usize)] = 1
+                }
+
+                result.into_pyarray(py)
+            }
+        )?;
+
+        Ok(result)
+    }
+
     #[pyclass]
     #[derive(Clone, Copy)]
-    struct _Environment {
+    struct RawEnvironment {
         state: State
     }
 
     #[pymethods]
-    impl _Environment {
+    impl RawEnvironment {
         #[new]
         fn new() -> Self {
-            _Environment {
+            RawEnvironment {
                 state: Game::initial_state()
             }
         }
 
         fn step(&mut self, action: i32) -> f32 {
-            let action = ((action / (4 * 3)) as u8, (action % (4 * 3)) as u8);
+            // Python側の座標系（Rust側では0は盤面の右下ですが、Python側では左上）に合うように、アクションを変更します。
+
+            let action = {
+                let result = ((action / (4 * 3)) as u8, (action % (4 * 3)) as u8);
+
+                if result.0 < 4 * 3 {
+                    (12 - 1 - result.0, 12 - 1 - result.1)
+                } else {
+                    (result.0, 12 - 1 - result.1)
+                }
+            };
+
             let (next_state, reward) = Game::next_state(&self.state, action);
 
             self.state = next_state;
@@ -37,94 +129,24 @@ mod quantum_animal_shogi {
         }
 
         fn observe<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-            let result = PyDict::new(py);
-
-            result.set_item(
-                "observation",
-                {
-                    // チャンネルは、（駒種（ひよこ、きりん、ぞう、ライオン、にわとり）＋由来（先手、後手））×所有者（自分、敵）の14チャンネルです。
-
-                    let mut result = Array2::<f32>::zeros((4 * 3 + 8, (5 + 2) * 2));
-
-                    // 盤面。
-
-                    {
-                        for index in 0..8_usize {
-                            let bit_board = self.state.bit_boards[index];
-
-                            if bit_board == 0 {
-                                continue;
-                            }
-
-                            let i = (4 * 3 - 1 - bit_board.trailing_zeros()) as usize;
-
-                            let channel_index = if self.state.ownership & 1 << index != 0 { 0 } else { 7 };
-
-                            for piece_bit in bits(self.state.pieces[index]) {
-                                result[[i, channel_index + piece_bit]] = 1.0;
-                            }
-
-                            result[[i, channel_index + 5 + if (0..4).contains(&index) { 0 } else { 1 }]] = 1.0;
-                        }
-                    }
-
-                    // 持ち駒。
-
-                    {
-                        let mut i_0 = 4 * 3;
-                        let mut i_1 = 4 * 3 + 8 - 1;
-
-                        for index in 0..8_usize {
-                            let bit_board = self.state.bit_boards[index];
-
-                            if bit_board != 0 {
-                                continue;
-                            }
-
-                            let owned = self.state.ownership & 1 << index != 0;
-
-                            let i = if owned { i_0 } else { i_1 };
-                            let channel_index = if owned { 0 } else { 7 };
-
-                            for piece_bit in bits(self.state.pieces[index]) {
-                                result[[i, channel_index + piece_bit]] = 1.0;
-                            }
-
-                            result[[i, channel_index + 5 + if (0..4).contains(&index) { 0 } else { 1 }]] = 1.0;
-
-                            if owned {
-                                i_0 += 1;
-                            } else {
-                                i_1 -= 1;
-                            }
-                        }
-                    }
-
-                    result
-                }.into_pyarray(py)
-            )?;
-
-            // 合法手。
-
-            result.set_item(
-                "action_mask",
-                {
-                    let mut result = Array1::<i8>::zeros(((4 * 3) + 8) * (4 * 3));
-
-                    for action in Game::legal_actions(&self.state) {
-                        result[(action.0 as usize) * (4 * 3) + action.1 as usize] = 1
-                    }
-
-                    result
-                }.into_pyarray(py)
-            )?;
-
-            Ok(result)
+            observation(&self.state, py)
         }
 
-        #[getter]
-        fn turn(&self) -> u16 {
-            self.state.turn
+        fn observe_turned<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+            // 盤面を回転した状態を取得します。
+
+            let state = {
+                let mut result = self.state.clone();
+
+                result.ownership = !result.ownership;
+                result.bit_boards = result.bit_boards.map(|bit_board| bit_board.reverse_bits() >> 4);
+
+                result
+            };
+
+            // 観測結果を取得し、リターンします。
+
+            observation(&state, py)
         }
 
         fn __copy__(&self) -> Self {
