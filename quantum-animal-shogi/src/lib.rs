@@ -363,9 +363,9 @@ impl Game {
         Some(result)
     }
 
-    // 勝利したかを取得します。
+    // 負けたかを取得します。
 
-    fn won(state: &State) -> bool {
-        bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)  // next_stateで盤面が回転しているので、!state.ownership。
+    fn lose(state: &State) -> bool {
+        bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)
     }
 }
