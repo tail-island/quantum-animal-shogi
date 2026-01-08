@@ -257,13 +257,13 @@ impl Game {
 
     // 次のステートを取得します。
 
-    pub fn next_state(state: &State, action: (u8, u8)) -> (State, f32) {
+    pub fn next_state(state: &State, action: (u8, u8)) -> Option<State> {
         let mut result = state.clone();
 
         // 合法手であることをチェックします。
 
         if !Game::legal_actions(&state).contains(&action) {
-            return (result, -1.0);
+            return None;
         }
 
         // 次のステートを取得します。
@@ -349,10 +349,6 @@ impl Game {
             })();
         }
 
-        // 勝利したか確認します。
-
-        let won = bits(result.ownership).any(|index| result.bit_boards[index] == 0 && result.pieces[index] == 0b_0000_1000);
-
         // 盤面を回転します。
 
         result.ownership = !result.ownership;
@@ -364,6 +360,12 @@ impl Game {
 
         // 次のステートを返します。
 
-        (result, if won { 1.0 } else { 0.0 })
+        Some(result)
+    }
+
+    // 勝利したかを取得します。
+
+    fn won(state: &State) -> bool {
+        bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)  // next_stateで盤面が回転しているので、!state.ownership。
     }
 }

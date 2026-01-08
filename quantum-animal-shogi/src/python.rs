@@ -117,11 +117,17 @@ mod quantum_animal_shogi {
                 }
             };
 
-            let (next_state, reward) = Game::next_state(&self.state, action);
+            let Some(next_state) = Game::next_state(&self.state, action) else {
+                return -1.0;
+            };
 
             self.state = next_state;
 
-            reward
+            if Game::won(&self.state) {
+                1.0
+            } else {
+                0.0
+            }
         }
 
         fn reset(&mut self) {
