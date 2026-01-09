@@ -259,7 +259,8 @@ mod quantum_animal_shogi {
         let indices = empty()
             .chain(observation.column_iter().enumerate().filter_map(|(index, column)| if column[5] == 1.0 { Some(index) } else { None }))
             .chain(observation.column_iter().enumerate().filter_map(|(index, column)| if column[6] == 1.0 { Some(index) } else { None }))
-            .collect::<Vec<_>>();
+            .collect_array::<8>()
+            .unwrap();
 
         let pieces = indices.iter()
             .map(|index| observation.column(*index))
