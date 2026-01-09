@@ -25,7 +25,7 @@ fn bits<T: PrimInt + BitAndAssign>(x: T) -> impl Iterator<Item = usize> + Clone 
     })
 }
 
-// 駒の移動先を表す配列です。
+// 駒の移動先を事前計算した配列です。
 
 static NEXTS: LazyLock<[[u16; 4 * 3]; 5]> = LazyLock::new(|| {  // [Piece、ビットの位置]
     let n = |bit_board| (bit_board & 0b_000_111_111_111) << 3;
@@ -363,9 +363,9 @@ impl Game {
         Some(result)
     }
 
-    // 負けたかを取得します。
+    // 負けたかを取得します（手番が移動した後に呼び出されるので、「負け」の判定となります）。
 
-    fn lose(state: &State) -> bool {
+    fn lost(state: &State) -> bool {
         bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)
     }
 }

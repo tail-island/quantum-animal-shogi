@@ -6,11 +6,13 @@ from pettingzoo import AECEnv
 from .quantum_animal_shogi import RawEnvironment
 
 
+# PettingZooの環境です。
+
 class Environment(AECEnv):
     metadata = {"render_modes": ["human"], "name": "quantum-animal-shogi"}
 
     def __init__(self, render_mode=None):
-        self.raw_env = RawEnvironment()
+        self.raw_env = RawEnvironment()  # メモリ効率を良くしたい場合は、本コードを参考にRawEnvironmentの使用を検討してください。呼び出しが変わるので、面倒だけど……。
 
         self.render_mode = render_mode
         self.possible_agents = ["player_0", "player_1"]
@@ -24,7 +26,7 @@ class Environment(AECEnv):
 
     @lru_cache(maxsize=None)
     def observation_space(self, agent):
-        return Dict({"observation": Box(low=0, high=1, shape=[4 * 3 + 8, 5 + 2 + 2]), "action_mask": MultiBinary((4 * 3 + 8) * (4 * 3))})
+        return Dict({"observation": Box(low=0, high=1, shape=[4 * 3 + 8, 5 + 2 + 2]), "action_mask": MultiBinary((4 * 3 + 8) * (4 * 3)), "turn": Discrete(1_000)})
 
     def observe(self, agent):
         return self.observations[agent]
@@ -56,7 +58,7 @@ class Environment(AECEnv):
 
         reward = self.raw_env.step(action)
 
-        if reward != 0:  # 勝敗が決定した場合。
+        if reward != 0:  # 勝敗が決定した場合です。
             self.observations[self.agents[(self.agents.index(self.agent_selection) + 0) % 2]] = self.raw_env.observe_turned()
 
             self.rewards[self.agents[(self.agents.index(self.agent_selection) + 0) % 2]] =  reward  # noqa: E222

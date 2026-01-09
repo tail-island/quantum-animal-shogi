@@ -1,5 +1,7 @@
 use pyo3::pymodule;
 
+// Pythonと連携するためのモジュールです。PettingZooの環境作成の補助をします。PettingZooの環境そのものは、python/quantum_animal_shogi/__init__.pyを参照してください。
+
 #[pymodule]
 mod quantum_animal_shogi {
     use ndarray::{Array1, Array2};
@@ -8,12 +10,18 @@ mod quantum_animal_shogi {
 
     use crate::{Game, State, bits};
 
+    // 観測します。RustのStateのままでも良いのですけど、Pythonで観測しやすい（と思われる）形に変換しておきます。
+
     fn observation<'py>(state: &State, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let result = PyDict::new(py);
+        // 観測結果そのものは"observation"に入れ、合法手を観測結果の"action_mask"に入れるのがPettingZooのおすすめみたいなので、Dictを作成します。
+
+        let result = PyDict::new(py);  // PyDictはmutでなくても更新できちゃいます。。。
 
         result.set_item(
             "observation",
             {
+                // "observation"はNumPy配列（Dictではない）がPettingZooのおすすめみたいなので、NumPy配列を作成します。
+
                 let mut result = Array2::<f32>::zeros((4 * 3 + 8, 5 + 2 + 2));  // [行(4)×列（3）＋持ち駒（自分と敵合わせて8）、駒種（ひよこ、きりん、ぞう、ライオン、にわとり）＋由来（先手、後手））＋所有者（自分、敵）]。
 
                 // 盤面。
@@ -66,6 +74,8 @@ mod quantum_animal_shogi {
         result.set_item(
             "action_mask",
             {
+                // "action_mask"は1次元のMultiBinaryがPettingZooのおすすめみたいなので、選択可能なアクションのインデックスをTrueにしたNumPy配列を作成します。1次元のMultiBinaryにするために、アクションは(u8, u8)ではなく、u16にします。で、action.0 << 4 | action.1だと膨大な数の配列になってしまうので、action.0 * 12 + action.1にします。
+
                 let mut result = Array1::<i8>::zeros(((4 * 3) + 8) * (4 * 3));
 
                 for action in Game::legal_actions(&state) {
@@ -86,8 +96,17 @@ mod quantum_animal_shogi {
             }
         )?;
 
+        // ターン。
+
+        result.set_item(
+            "turn",
+            state.turn
+        )?;
+
         Ok(result)
     }
+
+    // PettingZooのAECEnvを委譲で作成可能にするためのクラスです。
 
     #[pyclass]
     #[derive(Clone, Copy)]
@@ -97,12 +116,18 @@ mod quantum_animal_shogi {
 
     #[pymethods]
     impl RawEnvironment {
+        // コンストラクタです。
+
         #[new]
         fn new() -> Self {
             RawEnvironment {
                 state: Game::initial_state()
             }
         }
+
+        // TODO: 観測結果からリストアする機能を追加する！
+
+        // 1ステップ進め、報酬を返します。
 
         fn step(&mut self, action: i32) -> f32 {
             // Python側の座標系（Rust側では0は盤面の右下ですが、Python側では左上）に合うように、アクションを変更します。
@@ -118,25 +143,31 @@ mod quantum_animal_shogi {
             };
 
             let Some(next_state) = Game::next_state(&self.state, action) else {
-                return -1.0;
+                return -1.0;  // 不正なアクションは反則負けとします。
             };
 
             self.state = next_state;
 
-            if Game::won(&self.state) {
-                1.0
+            if Game::lost(&self.state) {
+                1.0  // 次の状態での手番は敵なので、敵が負けたら自分の勝ちになります。
             } else {
                 0.0
             }
         }
 
+        // 環境をリセットします。
+
         fn reset(&mut self) {
             self.state = Game::initial_state();
         }
 
+        // 観測を実施します。
+
         fn observe<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
             observation(&self.state, py)
         }
+
+        // 勝敗が決した後に盤面を観測できるよう、回転させた状態での観測を実施します。
 
         fn observe_turned<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
             // 盤面を回転した状態を取得します。
@@ -154,6 +185,14 @@ mod quantum_animal_shogi {
 
             observation(&state, py)
         }
+
+        // 負けたかどうかを取得します。
+
+        fn lost(&self) -> bool {
+            Game::lost(&self.state)
+        }
+
+        // Pythonで状態として保存でき量にするために、copyとdeepcopy、piekleに対応させます。
 
         fn __copy__(&self) -> Self {
             *self
@@ -203,6 +242,8 @@ mod quantum_animal_shogi {
                 }
             )
         }
+
+        // デバッグ用に、盤面を文字列化します。
 
         fn __str__(&self) -> String {
             self.state.to_string()
