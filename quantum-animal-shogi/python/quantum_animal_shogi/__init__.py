@@ -3,7 +3,7 @@ from functools import lru_cache
 from gymnasium.spaces import Box, Dict, Discrete, MultiBinary
 from pettingzoo import AECEnv
 
-from .quantum_animal_shogi import RawEnvironment
+from .quantum_animal_shogi import RawEnvironment, _raw_environment_from_observation
 
 
 # PettingZooの環境です。
@@ -76,6 +76,11 @@ class Environment(AECEnv):
             self.render()
 
 
+def raw_environment_from_observation(observation):
+    return _raw_environment_from_observation(observation["observation"].T, observation["turn"])
+
+
 __all__ = [
-    "Environment"
+    "Environment",
+    "raw_environment_from_observation"
 ]

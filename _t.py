@@ -1,6 +1,6 @@
 import numpy as np
 
-from quantum_animal_shogi import Environment;
+from quantum_animal_shogi import Environment, raw_environment_from_observation
 from pettingzoo.test import api_test
 
 
@@ -20,6 +20,8 @@ env.reset()
 
 for agent in env.agent_iter():
     observation, reward, termination, truncation, info = env.last()
+
+    raw_env = raw_environment_from_observation(observation)
 
     board, hand = np.split(observation["observation"], [4 * 3])
     action_mask = observation["action_mask"]

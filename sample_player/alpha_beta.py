@@ -3,7 +3,7 @@ import numpy as np
 from copy import copy
 from itertools import starmap
 from math import inf
-from quantum_animal_shogi import Environment;
+from quantum_animal_shogi import Environment, raw_environment_from_observation
 from sys import float_info
 
 
@@ -94,9 +94,15 @@ def alpha_beta(raw_env, depth, alpha, beta):
     return alpha, action
 
 
-if __name__ == "__main__":
-    # 自己対戦させてみます。
+# アルファ・ベータ法でアクションを選択します。
 
+def action(observation):
+    return alpha_beta(raw_environment_from_observation(observation), MAX_DEPTH, -inf, inf)[1]
+
+
+# 自己対戦させてみます。
+
+if __name__ == "__main__":
     env = Environment(render_mode="human")
     env.reset()
 
@@ -106,8 +112,6 @@ if __name__ == "__main__":
         if termination or truncation:
             env.step(None)
 
-        action = alpha_beta(env.raw_env, MAX_DEPTH, -inf, inf)[1]
-
-        env.step(action)
+        env.step(action(observation))
 
     env.close()
