@@ -10,7 +10,7 @@ mod quantum_animal_shogi {
     use nalgebra::SMatrix;
     use ndarray::{Array1, Array2};
     use numpy::{IntoPyArray, PyReadonlyArray2};
-    use pyo3::{Bound, PyAny, PyResult, Python, pyclass, pyfunction, pymethods, types::{PyAnyMethods, PyDict}};
+    use pyo3::{Bound, PyAny, PyResult, Python, pyclass, pymethods, types::{PyAnyMethods, PyDict}};
 
     use crate::{Game, State, bits};
 
@@ -126,6 +126,39 @@ mod quantum_animal_shogi {
         fn new() -> Self {
             Self {
                 state: Game::initial_state()
+            }
+        }
+
+        // 観測結果からRawEnvironmentを作成します。
+
+        #[staticmethod]
+        fn from_observation(observation: PyReadonlyArray2<f32>, turn: u16) -> Self {
+            let observation: SMatrix<f32, 9, 20>  = SMatrix::from_column_slice(observation.as_slice().unwrap());
+
+            let indices = empty()
+                .chain(observation.column_iter().enumerate().filter_map(|(index, column)| if column[5] == 1.0 { Some(index) } else { None }))
+                .chain(observation.column_iter().enumerate().filter_map(|(index, column)| if column[6] == 1.0 { Some(index) } else { None }))
+                .collect_array::<8>()
+                .unwrap();
+
+            let pieces = indices.iter()
+                .map(|index| observation.column(*index))
+                .map(|column| (column[0] as u8) << 0 | (column[1] as u8) << 1 | (column[2] as u8) << 2 | (column[3] as u8) << 3 | (column[4] as u8) << 4)
+                .collect_array::<8>()
+                .unwrap();
+
+            let ownership = indices.iter()
+                .enumerate()
+                .filter_map(|(i, index)| if observation.column(*index)[7] == 1.0 { Some(i) } else { None })
+                .fold(0, |acc, i| acc | 1 << i);
+
+            let bit_boards = indices.iter()
+                .map(|index| if *index < 12 { 1 << (12 - 1 - *index) } else { 0 })
+                .collect_array::<8>()
+                .unwrap();
+
+            Self {
+                state: State { pieces, ownership, bit_boards, turn }
             }
         }
 
@@ -249,37 +282,6 @@ mod quantum_animal_shogi {
 
         fn __str__(&self) -> String {
             self.state.to_string()
-        }
-    }
-
-    #[pyfunction]
-    fn _raw_environment_from_observation(observation: PyReadonlyArray2<f32>, turn: u16) -> RawEnvironment {
-        let observation: SMatrix<f32, 9, 20>  = SMatrix::from_column_slice(observation.as_slice().unwrap());
-
-        let indices = empty()
-            .chain(observation.column_iter().enumerate().filter_map(|(index, column)| if column[5] == 1.0 { Some(index) } else { None }))
-            .chain(observation.column_iter().enumerate().filter_map(|(index, column)| if column[6] == 1.0 { Some(index) } else { None }))
-            .collect_array::<8>()
-            .unwrap();
-
-        let pieces = indices.iter()
-            .map(|index| observation.column(*index))
-            .map(|column| (column[0] as u8) << 0 | (column[1] as u8) << 1 | (column[2] as u8) << 2 | (column[3] as u8) << 3 | (column[4] as u8) << 4)
-            .collect_array::<8>()
-            .unwrap();
-
-        let ownership = indices.iter()
-            .enumerate()
-            .filter_map(|(i, index)| if observation.column(*index)[7] == 1.0 { Some(i) } else { None })
-            .fold(0, |acc, i| acc | 1 << i);
-
-        let bit_boards = indices.iter()
-            .map(|index| if *index < 12 { 1 << (12 - 1 - *index) } else { 0 })
-            .collect_array::<8>()
-            .unwrap();
-
-        RawEnvironment {
-            state: State { pieces, ownership, bit_boards, turn }
         }
     }
 }
