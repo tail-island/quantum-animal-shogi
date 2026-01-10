@@ -15,6 +15,8 @@ animal_images = list(map(
 
 
 def create_observation_surface(observation):
+    observation = observation["observation"]
+
     def create_piece_surface(piece):
         result = pygame.surface.Surface((3 * IMAGE_SIZE, 3 * IMAGE_SIZE), pygame.SRCALPHA)
 
@@ -28,8 +30,6 @@ def create_observation_surface(observation):
         pygame.draw.circle(result, (0xff, 0x7f, 0x7f) if piece[5] else (0x7f, 0xff, 0x7f), (1.5 * IMAGE_SIZE, 1.5 * IMAGE_SIZE), 0.5 * IMAGE_SIZE)
 
         return result
-
-    observation = observation["observation"]
 
     def create_enemy_hands_surface():
         result = pygame.surface.Surface((2 * 3 * IMAGE_SIZE, 4 * 3 * IMAGE_SIZE))
@@ -113,6 +113,15 @@ def get_pos(action_item):
     return candidates[action_item]
 
 
+def create_candidates_surface(candidates):
+    result = pygame.Surface((3 * 3 * IMAGE_SIZE, 4 * 3 * IMAGE_SIZE), pygame.SRCALPHA)
+
+    for result_1_candidate in candidates:
+        pygame.draw.rect(result, (0x00, 0x00, 0xff, 0x3f), (*get_pos(result_1_candidate), 3 * IMAGE_SIZE, 3 * IMAGE_SIZE))
+
+    return result
+
+
 def play(action_fn):
     pygame.init()
     pygame.display.set_caption("りょうしどうぶつしょうぎ")
@@ -126,9 +135,9 @@ def play(action_fn):
             np.where(observation["action_mask"])[0]
         ))
 
-        board_surface = create_observation_surface(observation)
+        observation_surface = create_observation_surface(observation)
 
-        screen.blit(board_surface, (0, 0))
+        screen.blit(observation_surface, (0, 0))
         pygame.display.update()
 
         while True:
@@ -153,23 +162,17 @@ def play(action_fn):
                         if not candidates:
                             continue
 
-                        screen.blit(board_surface, (0, 0))
-
-                        candidate_surface = pygame.Surface((3 * 3 * IMAGE_SIZE, 4 * 3 * IMAGE_SIZE), pygame.SRCALPHA)
-                        for result_1_candidate in candidates:
-                            pygame.draw.rect(candidate_surface, (0x00, 0x00, 0xff, 0x3f), (*get_pos(result_1_candidate), 3 * IMAGE_SIZE, 3 * IMAGE_SIZE))
-                        screen.blit(candidate_surface, (3 * 3 * IMAGE_SIZE, 0 * 3 * IMAGE_SIZE))
-
+                        screen.blit(observation_surface, (0, 0))
+                        screen.blit(create_candidates_surface(candidates), (3 * 3 * IMAGE_SIZE, 0 * 3 * IMAGE_SIZE))
                         pygame.display.update()
 
                         result_0 = action_item
                     else:
                         if action_item not in candidates:
-                            screen.blit(board_surface, (0, 0))
+                            screen.blit(observation_surface, (0, 0))
                             pygame.display.update()
 
                             result_0 = None
-
                             continue
 
                         return result_0 * (4 * 3) + action_item
