@@ -14,21 +14,29 @@ MAX_DEPTH = 5
 # 盤面の評価値を取得します。
 
 def score(board, hand):
+    # 駒の価値を取得します。
+
     def piece_advantage(piece):
         return sum(starmap(
             lambda i, advantage: advantage if piece[i] else 0,  # インデックス0〜4は、駒の可能性の有無です（インデックス5と6は、その駒が先手由来か後手由来）。
             enumerate([1, 4, 5, 100, 10])  # 「ひよこ」と「きりん」、「ぞう」、「ライオン」、「にわとり」の駒得を、適当に決め打ってみました。
         ))
 
+    # 自分の駒の評価値を取得します。
+
     ally_score = sum(map(
         piece_advantage,
         np.concatenate([board[board[:, 5 + 2 + 0] == 1], hand[hand[:, 5 + 2 + 0] == 1]], axis=0)  # 自分が所有する駒を取得します。自分が所有する駒は、インデックス7が1
     ))
 
+    # 敵の駒の評価値を取得します。
+
     enemy_score = sum(map(
         piece_advantage,
         np.concatenate([board[board[:, 5 + 2 + 1] == 1], hand[hand[:, 5 + 2 + 1] == 1]], axis=0)  # 敵が所有する駒を取得します。敵が所有する駒は、インデックス8が1
     ))
+
+    # 自分の駒の評価値ー敵の駒の評価値を評価値としてリターンします。
 
     return ally_score - enemy_score
 

@@ -33,9 +33,11 @@ static NEXTS: LazyLock<[[u16; 4 * 3]; 5]> = LazyLock::new(|| {  // [Piece、ビ�
     let e = |bit_board| (bit_board & 0b_011_011_011_011) << 1;
     let w = |bit_board| (bit_board & 0b_110_110_110_110) >> 1;
 
-    (0..5).into_iter()
+    (0..5)
+        .into_iter()
         .map(|piece_bit| {
-            (0..4 * 3).into_iter()
+            (0..4 * 3)
+                .into_iter()
                 .map(|bit_board_bit| (1 << bit_board_bit) as u16)
                 .map(|bit_board| match piece_bit {
                     0 /* ひよこ   */ => n(bit_board),
@@ -100,9 +102,11 @@ impl fmt::Display for State {
                 )
                 .chain(once("-".repeat((2 + 11 + 2) * 3 + 2 * 2).to_string()))
                 .chain(
-                    (0..4).into_iter()
+                    (0..4)
+                        .into_iter()
                         .map(|r| {
-                            (0..3).into_iter()
+                            (0..3)
+                                .into_iter()
                                 .map(|c| {
                                     let Some(index) = bit_boards.iter().position(|bit_board| bit_board & 1 << (r * 3 + c) != 0) else {
                                         return " ".repeat(2 + 11 + 2).to_string();
@@ -205,14 +209,19 @@ impl Game {
             'outer: loop {
                 // 成っている駒を元に戻します。
 
-                let pieces = result.pieces[begin_index..begin_index + 4].iter().map(|piece| (piece | piece >> 4) & 0b_0000_1111).collect_array::<4>().unwrap();
+                let pieces = result.pieces[begin_index..begin_index + 4]
+                    .iter()
+                    .map(|piece| (piece | piece >> 4) & 0b_0000_1111)
+                    .collect_array::<4>()
+                    .unwrap();
 
                 // 駒の可能性の組み合わせすべてで、ループを回します。
 
                 for target_piece in 0b_0001..0b_1111 {
                     // 組み合わせ通りの駒の数を数えます。
 
-                    let number_of_pieces = pieces.iter()
+                    let number_of_pieces = pieces
+                        .iter()
                         .filter(|piece| **piece == target_piece)
                         .count() as u32;
 
@@ -224,7 +233,8 @@ impl Game {
 
                     // 可能性を削除する駒の集合を作成します。
 
-                    let mut iter = pieces.iter()
+                    let mut iter = pieces
+                        .iter()
                         .enumerate()
                         .filter(|(_, piece)| **piece != target_piece && **piece & target_piece != 0)
                         .peekable();
@@ -363,7 +373,13 @@ impl Game {
         Some(result)
     }
 
-    // 負けたかを取得します（手番が移動した後に呼び出されるので、「負け」の判定となります）。
+    // トライに成功して勝ったかを取得します（next_stepの「前」に呼び出してください）。
+
+    fn won(state: &State) -> bool {
+        bits(state.ownership).any(|index| state.bit_boards[index] & 0b_111_000_000_000 != 0 && state.pieces[index] & 0b_0000_1000 != 0)
+    }
+
+    // ライオンがキャッチされて負けたかを取得します（next_stepの「後」に呼び出してください）。
 
     fn lost(state: &State) -> bool {
         bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)

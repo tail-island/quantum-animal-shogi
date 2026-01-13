@@ -141,18 +141,21 @@ mod quantum_animal_shogi {
                 .collect_array::<8>()
                 .unwrap();
 
-            let pieces = indices.iter()
+            let pieces = indices
+                .iter()
                 .map(|index| observation.column(*index))
                 .map(|column| (column[0] as u8) << 0 | (column[1] as u8) << 1 | (column[2] as u8) << 2 | (column[3] as u8) << 3 | (column[4] as u8) << 4)
                 .collect_array::<8>()
                 .unwrap();
 
-            let ownership = indices.iter()
+            let ownership = indices
+                .iter()
                 .enumerate()
                 .filter_map(|(i, index)| if observation.column(*index)[7] == 1.0 { Some(i) } else { None })
                 .fold(0, |acc, i| acc | 1 << i);
 
-            let bit_boards = indices.iter()
+            let bit_boards = indices
+                .iter()
                 .map(|index| if *index < 12 { 1 << (12 - 1 - *index) } else { 0 })
                 .collect_array::<8>()
                 .unwrap();
@@ -165,6 +168,10 @@ mod quantum_animal_shogi {
         // 1ステップ進め、報酬を返します。
 
         fn step(&mut self, action: i32) -> f32 {
+            if Game::won(&self.state) {
+                return 1.0;
+            }
+
             // Python側の座標系（Rust側では0は盤面の右下ですが、Python側では左上）に合うように、アクションを変更します。
 
             let action = {
@@ -184,10 +191,10 @@ mod quantum_animal_shogi {
             self.state = next_state;
 
             if Game::lost(&self.state) {
-                1.0  // 次の状態での手番は敵なので、敵が負けたら自分の勝ちになります。
-            } else {
-                0.0
+                return 1.0;  // 次の状態での手番は敵なので、敵が負けたら自分の勝ちになります。
             }
+
+            0.0
         }
 
         // 環境をリセットします。
