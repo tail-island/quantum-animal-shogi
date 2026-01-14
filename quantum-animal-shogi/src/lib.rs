@@ -135,7 +135,7 @@ impl fmt::Display for State {
 pub struct Game;
 
 impl Game {
-    // コンストラクタ。
+    // コンストラクタです。
 
     pub fn initial_state() -> State {
         State {
@@ -215,7 +215,7 @@ impl Game {
                     .collect_array::<4>()
                     .unwrap();
 
-                // 駒の可能性の組み合わせすべてで、ループを回します。
+                // 駒の可能性の組み合わせの全てで、ループを回します。
 
                 for target_piece in 0b_0001..0b_1111 {
                     // 組み合わせ通りの駒の数を数えます。
@@ -225,7 +225,7 @@ impl Game {
                         .filter(|piece| **piece == target_piece)
                         .count() as u32;
 
-                    // 組み合わせ通り駒の数が、その可能性を満たす駒の数（どうぶつしょうぎは4種類4駒なので立っているビットの数と同じ）より小さいなら、他の駒にまだ可能性があるのでコンティニューします。
+                    // 組み合わせ通り駒の数が、その可能性を満たす駒の数（どうぶつしょうぎは4種4駒なので立っているビットの数と同じ）より小さいなら、他の駒にまだ可能性があるのでコンティニューします。
 
                     if number_of_pieces < target_piece.count_ones() {
                         continue;
@@ -239,7 +239,7 @@ impl Game {
                         .filter(|(_, piece)| **piece != target_piece && **piece & target_piece != 0)
                         .peekable();
 
-                    // 集合が空なら状態が変わらないので、コンティニューします。
+                    // 集合が空なら収束（収縮？）は不要ので、コンティニューします。
 
                     if iter.peek().is_none() {
                         continue;
@@ -251,7 +251,7 @@ impl Game {
                         result.pieces[begin_index + index] &= !(target_piece | target_piece << 4);
                     }
 
-                    // 駒の状態が変わったので最初からやり直します。
+                    // 収束（収縮？）で駒の状態が変わったので、最初からやり直します。
 
                     continue 'outer;
                 }
@@ -330,7 +330,7 @@ impl Game {
                 // 持ち駒から、ライオンの可能性を外します。
 
                 for index in bits(result.ownership)
-                    .filter(|index| result.bit_boards[*index] == 0 && result.pieces[*index] & 0b_0000_1000 != 0 && result.pieces[*index] != 0b_0000_1000)
+                    .filter(|index| result.bit_boards[*index] == 0 && result.pieces[*index] & 0b_0000_1000 != 0 && result.pieces[*index] != 0b_0000_1000)  // ライオンそのものの場合は除外したいので!= 0b_0000_1000。
                     .collect::<ArrayVec<_, 8>>()
                 {
                     result.pieces[index] &= !0b_0000_1000;
@@ -373,15 +373,17 @@ impl Game {
         Some(result)
     }
 
-    // トライに成功して勝ったかを取得します（next_stepの「前」に呼び出してください）。
+    // トライに成功して勝ったかを取得します。
 
     fn won(state: &State) -> bool {
         bits(state.ownership).any(|index| state.bit_boards[index] & 0b_111_000_000_000 != 0 && state.pieces[index] & 0b_0000_1000 != 0)
     }
 
-    // ライオンがキャッチされて負けたかを取得します（next_stepの「後」に呼び出してください）。
+    // ライオンがキャッチされて負けたかを取得します。
 
     fn lost(state: &State) -> bool {
         bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)
     }
+
+    // 「千日手」はStateが大きくなってしまうので、実装していません。
 }

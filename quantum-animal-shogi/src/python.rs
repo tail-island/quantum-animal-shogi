@@ -168,10 +168,6 @@ mod quantum_animal_shogi {
         // 1ステップ進め、報酬を返します。
 
         fn step(&mut self, action: i32) -> f32 {
-            if Game::won(&self.state) {
-                return 1.0;
-            }
-
             // Python側の座標系（Rust側では0は盤面の右下ですが、Python側では左上）に合うように、アクションを変更します。
 
             let action = {
@@ -190,9 +186,15 @@ mod quantum_animal_shogi {
 
             self.state = next_state;
 
-            if Game::lost(&self.state) {
-                return 1.0;  // 次の状態での手番は敵なので、敵が負けたら自分の勝ちになります。
+            if Game::won(&self.state) {
+                return -1.0;  // 次の状態での手番は敵なので、敵が勝ったら自分の負けになります。
             }
+
+            if Game::lost(&self.state) {
+                return  1.0;  // 次の状態での手番は敵なので、敵が負けたら自分の勝ちになります。
+            }
+
+            // Stateの肥大化を防ぐために、千日手は対象外としています。
 
             0.0
         }
@@ -226,6 +228,12 @@ mod quantum_animal_shogi {
             // 観測結果を取得し、リターンします。
 
             observation(&state, py)
+        }
+
+        // 勝ったかどうかを取得します。
+
+        fn won(&self) -> bool {
+            Game::won(&self.state)
         }
 
         // 負けたかどうかを取得します。

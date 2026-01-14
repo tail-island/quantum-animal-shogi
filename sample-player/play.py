@@ -184,6 +184,7 @@ def play(action_fn):
         observation, reward, termination, truncation, info = env.last()
 
         if termination or truncation:
+            print(f"{agent}\t{reward: }")
             env.step(None)
             continue
 

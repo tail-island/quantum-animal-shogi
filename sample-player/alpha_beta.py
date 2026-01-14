@@ -10,35 +10,57 @@ from quantum_animal_shogi import raw_environment_from_observation
 
 MAX_DEPTH = 5
 
+PIECE_ADVANTAGE_FACTOR = 0.8
+LION_POSITION_FACTOR = 0.2
+
 
 # 盤面の評価値を取得します。
 
 def score(board, hand):
     # 駒の価値を取得します。
 
-    def piece_advantage(piece):
+    def piece_advantage_score(piece):
         return sum(starmap(
             lambda i, advantage: advantage if piece[i] else 0,  # インデックス0〜4は、駒の可能性の有無です（インデックス5と6は、その駒が先手由来か後手由来）。
             enumerate([1, 4, 5, 100, 10])  # 「ひよこ」と「きりん」、「ぞう」、「ライオン」、「にわとり」の駒得を、適当に決め打ってみました。
-        ))
+        )) * PIECE_ADVANTAGE_FACTOR
 
     # 自分の駒の評価値を取得します。
 
-    ally_score = sum(map(
-        piece_advantage,
+    ally_piece_advantage_score = sum(map(
+        piece_advantage_score,
         np.concatenate([board[board[:, 5 + 2 + 0] == 1], hand[hand[:, 5 + 2 + 0] == 1]], axis=0)  # 自分が所有する駒を取得します。自分が所有する駒は、インデックス7が1
     ))
 
     # 敵の駒の評価値を取得します。
 
-    enemy_score = sum(map(
-        piece_advantage,
+    enemy_piece_advantage_score = sum(map(
+        piece_advantage_score,
         np.concatenate([board[board[:, 5 + 2 + 1] == 1], hand[hand[:, 5 + 2 + 1] == 1]], axis=0)  # 敵が所有する駒を取得します。敵が所有する駒は、インデックス8が1
     ))
 
-    # 自分の駒の評価値ー敵の駒の評価値を評価値としてリターンします。
+    # ライオンの位置の評価値を取得します。
 
-    return ally_score - enemy_score
+    def lion_position_score(index):
+        return [100, 100, 100, 10, 10, 10, 5, 5, 5, 4, 4, 4, 1, 1, 1][index] * LION_POSITION_FACTOR  # 位置による有利不利を、適当に決め打ってみました。
+
+    # 自分のライオンの位置の評価値を取得します。
+
+    ally_lion_position_score = sum(map(
+        lion_position_score,
+        np.where((board[:, 5 + 2 + 0] == 1) & (board[:, 3] == 1))[0]
+    ))
+
+    # 敵のライオンの位置の評価値を取得します。
+
+    enemy_lion_position_score = sum(map(
+        lion_position_score,
+        12 - np.where((board[:, 5 + 2 + 1] == 1) & (board[:, 3] == 1))[0]
+    ))
+
+    # 自分の評価値ー敵の評価値を評価値としてリターンします。
+
+    return (ally_piece_advantage_score + ally_lion_position_score) - (enemy_piece_advantage_score + enemy_lion_position_score)
 
 
 # アルファ・ベータ法（Wikipediaに載っていた擬似コードそのままで、特別な工夫はなし）で手を選びます。量子どうぶつしょうぎのルール実装が面倒だったので、raw_envを再利用しています。
@@ -46,6 +68,12 @@ def score(board, hand):
 def alpha_beta(raw_env, depth, alpha, beta):
 #   if node が終端ノード or depth = 0  # noqa: E115
 #       return node の評価値           # noqa: E115
+
+    # 勝ったら（終端ノードなら）最大スコアを返します。
+
+    if raw_env.won():
+        return float_info.max, None
+        # return 1_000 + (MAX_DEPTH - depth), None  # こちらだと、遠回りせずに勝ちにいきます。βカットの効率は落ちると思うけど。。。
 
     # 負けたら（終端ノードなら）最小スコアを返します。
 
