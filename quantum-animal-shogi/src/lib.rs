@@ -163,7 +163,7 @@ impl Game {
             .map(|index| state.bit_boards[index])
             .fold(0, BitOr::bitor);
 
-        // 駒を指すアクションを取得します。
+        // 実行可能な駒を指すアクションの集合を取得します。
 
         let move_piece_actions = bits(state.ownership)
             .filter(|index| state.bit_boards[*index] != 0)
@@ -180,7 +180,7 @@ impl Game {
                 repeat(prev_bit).zip(next_bits)
             });
 
-        // 持ち駒を打つアクションを取得します。
+        // 実行可能な持ち駒を打つアクションの集合を取得します。
 
         let put_hand_actions = {
             let number_of_hands = bits(state.ownership)
@@ -225,7 +225,7 @@ impl Game {
                         .filter(|piece| **piece == target_piece)
                         .count() as u32;
 
-                    // 組み合わせ通り駒の数が、その可能性を満たす駒の数（どうぶつしょうぎは4種4駒なので立っているビットの数と同じ）より小さいなら、他の駒にまだ可能性があるのでコンティニューします。
+                    // 組み合わせ通り駒の数が、その可能性を満たす駒の数（どうぶつしょうぎは4種4駒だから立っているビットの数と同じ）より小さいなら、他の駒にまだ可能性があるのでコンティニューします。
 
                     if number_of_pieces < target_piece.count_ones() {
                         continue;
@@ -239,7 +239,7 @@ impl Game {
                         .filter(|(_, piece)| **piece != target_piece && **piece & target_piece != 0)
                         .peekable();
 
-                    // 集合が空なら収束（収縮？）は不要ので、コンティニューします。
+                    // 集合が空なら収束（収縮？）は不要なので、コンティニューして続けます。
 
                     if iter.peek().is_none() {
                         continue;
@@ -251,7 +251,7 @@ impl Game {
                         result.pieces[begin_index + index] &= !(target_piece | target_piece << 4);
                     }
 
-                    // 収束（収縮？）で駒の状態が変わったので、最初からやり直します。
+                    // 収束（収縮？）で駒の状態が変わったので、外側の無限ループに戻って最初からやり直します。
 
                     continue 'outer;
                 }
