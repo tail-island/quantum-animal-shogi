@@ -375,13 +375,13 @@ impl Game {
 
     // トライに成功して勝ったかを取得します。
 
-    fn won(state: &State) -> bool {
+    pub fn won(state: &State) -> bool {
         bits(state.ownership).any(|index| state.bit_boards[index] & 0b_111_000_000_000 != 0 && state.pieces[index] & 0b_0000_1000 != 0)
     }
 
     // ライオンがキャッチされて負けたかを取得します。
 
-    fn lost(state: &State) -> bool {
+    pub fn lost(state: &State) -> bool {
         bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)
     }
 
