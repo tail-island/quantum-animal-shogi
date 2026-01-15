@@ -1,1 +1,1 @@
-maturin develop --release && python ../_t.py
+cargo build --release && cd crates/python && maturin develop --release && cd ../.. && python ../_t.py
