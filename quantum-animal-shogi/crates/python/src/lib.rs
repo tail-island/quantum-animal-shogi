@@ -13,7 +13,7 @@ mod quantum_animal_shogi {
     use pyo3::{Bound, PyAny, PyResult, Python, pyclass, pymethods, types::{PyAnyMethods, PyDict}};
     use quantum_animal_shogi_core::{Game, State, bits};
 
-    // 観測します。RustのStateのままでも良いのですけど、Pythonで観測しやすい（と思われる）形に変換しておきます。
+    // 観測します。RustのStateのままでも良いのですけど、Pythonで扱いやすい（と思われる）形に変換しておきます。
 
     fn observation<'py>(state: &State, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         // 観測結果そのものは"observation"に入れ、合法手を観測結果の"action_mask"に入れるのがPettingZooのおすすめみたいなので、Dictを作成します。
