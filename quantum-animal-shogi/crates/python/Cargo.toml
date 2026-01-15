@@ -8,9 +8,9 @@ name = "quantum_animal_shogi"
 crate-type = ["cdylib"]
 
 [dependencies]
-itertools = "0.14.0"
-nalgebra = "0.34.1"
-ndarray = "0.17.1"
-numpy = "0.27.1"
-pyo3 = "0.27.0"
+itertools = "0"
+nalgebra = "0"
+ndarray = "0"
+numpy = "0"
+pyo3 = "0"
 quantum-animal-shogi-core = { path = "../core" }

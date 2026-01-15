@@ -10,8 +10,8 @@ from quantum_animal_shogi import raw_environment_from_observation
 
 MAX_DEPTH = 5
 
-PIECE_ADVANTAGE_FACTOR = 0.8
-LION_POSITION_FACTOR = 0.2
+PIECE_ADVANTAGE_FACTOR = 1.0  # 駒得オンリーで、
+LION_POSITION_FACTOR = 0.0    # ライオンの位置は無視します。
 
 
 # 盤面の評価値を取得します。

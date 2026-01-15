@@ -7,9 +7,9 @@ edition = "2024"
 crate-type = ["rlib"]
 
 [dependencies]
-arrayvec = "0.7.6"
-itertools = "0.14.0"
-nalgebra = "0.34.1"
-ndarray = "0.17.1"
-num-traits = "0.2.19"
-unicode-width = "0.2.2"
+arrayvec = "0"
+itertools = "0"
+nalgebra = "0"
+ndarray = "0"
+num-traits = "0"
+unicode-width = "0"
