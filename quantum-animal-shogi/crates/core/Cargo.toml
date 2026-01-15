@@ -9,7 +9,5 @@ crate-type = ["rlib"]
 [dependencies]
 arrayvec = "0"
 itertools = "0"
-nalgebra = "0"
-ndarray = "0"
 num-traits = "0"
 unicode-width = "0"

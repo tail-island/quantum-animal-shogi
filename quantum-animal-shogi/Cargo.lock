@@ -405,8 +405,6 @@ version = "0.1.0"
 dependencies = [
  "arrayvec",
  "itertools",
- "nalgebra",
- "ndarray",
  "num-traits",
  "unicode-width",
 ]
@@ -420,6 +418,14 @@ dependencies = [
  "ndarray",
  "numpy",
  "pyo3",
+ "quantum-animal-shogi-core",
+]
+
+[[package]]
+name = "quantum-animal-shogi-solver"
+version = "0.1.0"
+dependencies = [
+ "itertools",
  "quantum-animal-shogi-core",
 ]
 
