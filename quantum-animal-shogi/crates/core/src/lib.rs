@@ -56,10 +56,9 @@ static NEXTS: LazyLock<[[u16; 4 * 3]; 5]> = LazyLock::new(|| {  // [Piece、ビ�
 
 #[derive(Clone, Copy)]
 pub struct State {
-    pub pieces: [u8; 8],       // 駒（先手由来×4 + 後手由来×4）
-    pub ownership: u8,         // 駒を所有しているか
-    pub bit_boards: [u16; 8],  // 駒単位の盤面（持ち駒は、対応するbit_boardが0になります）
-    // pub turn: u16              // ターン（0, 1, 2, ...）
+    pub pieces: [u8; 8],      // 駒（先手由来×4 + 後手由来×4）
+    pub ownership: u8,        // 駒を所有しているか
+    pub bit_boards: [u16; 8]  // 駒単位の盤面（持ち駒は、対応するbit_boardが0になります）
 }
 
 impl fmt::Display for State {
@@ -80,14 +79,6 @@ impl fmt::Display for State {
 
             format!("{}{}{}", string, if (0..4).contains(&index) { "△" } else { "▽" }, " ".repeat(11 - string.width()))
         };
-
-        // let (ownership, bit_boards) = (|| {
-        //     if self.turn % 2 == 0 {
-        //         return (self.ownership, self.bit_boards);
-        //     }
-
-        //     (!self.ownership, self.bit_boards.map(|bit_board| bit_board.reverse_bits() >> 4))
-        // })();
 
         write!(
             f,
@@ -139,8 +130,7 @@ impl Game {
         State {
             pieces:     [0b_0_1111, 0b_0_1111, 0b_0_1111, 0b_0_1111, 0b_0_1111, 0b_0_1111, 0b_0_1111, 0b_0_1111],
             ownership:  0b_0000_1111,
-            bit_boards: [0b_000_000_000_001, 0b_000_000_000_010, 0b_000_000_000_100, 0b_000_000_010_000, 0b_000_010_000_000, 0b_001_000_000_000, 0b_010_000_000_000, 0b_100_000_000_000],
-            turn:       0
+            bit_boards: [0b_000_000_000_001, 0b_000_000_000_010, 0b_000_000_000_100, 0b_000_000_010_000, 0b_000_010_000_000, 0b_001_000_000_000, 0b_010_000_000_000, 0b_100_000_000_000]
         }
     }
 
@@ -361,10 +351,6 @@ impl Game {
 
         result.ownership = !result.ownership;
         result.bit_boards = result.bit_boards.map(|bit_board| bit_board.reverse_bits() >> 4);
-
-        // ターンを進めます。
-
-        result.turn += 1;
 
         // 次のステートを返します。
 

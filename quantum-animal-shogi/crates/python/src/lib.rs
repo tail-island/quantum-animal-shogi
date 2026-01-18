@@ -99,13 +99,6 @@ mod quantum_animal_shogi {
             }
         )?;
 
-        // ターン。
-
-        result.set_item(
-            "turn",
-            state.turn
-        )?;
-
         Ok(result)
     }
 
@@ -131,7 +124,7 @@ mod quantum_animal_shogi {
         // 観測結果からRawEnvironmentを作成します。
 
         #[staticmethod]
-        fn from_observation(observation: PyReadonlyArray2<f32>, turn: u16) -> Self {
+        fn from_observation(observation: PyReadonlyArray2<f32>) -> Self {
             let observation: SMatrix<f32, 9, 20>  = SMatrix::from_column_slice(observation.as_slice().unwrap());
 
             let indices = empty()
@@ -160,8 +153,56 @@ mod quantum_animal_shogi {
                 .unwrap();
 
             Self {
-                state: State { pieces, ownership, bit_boards, turn }
+                state: State { pieces, ownership, bit_boards }
             }
+        }
+
+        // 状態を描画します。
+
+        fn render(&self, turn: u32) {
+            let state = if turn % 2 == 0 {
+                self.state
+            } else {
+                let mut result = self.state.clone();
+
+                result.ownership = !result.ownership;
+                result.bit_boards = result.bit_boards.map(|bit_board| bit_board.reverse_bits() >> 4);
+
+                result
+            };
+
+            println!("{}", state.to_string());
+        }
+
+        // 環境をリセットします。
+
+        fn reset(&mut self) {
+            self.state = Game::initial_state();
+        }
+
+        // 観測を実施します。
+
+        fn observe<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+            observation(&self.state, py)
+        }
+
+        // 勝敗が決した後に盤面を観測できるよう、回転させた状態での観測を実施します。
+
+        fn observe_turned<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+            // 盤面を回転した状態を取得します。
+
+            let state = {
+                let mut result = self.state.clone();
+
+                result.ownership = !result.ownership;
+                result.bit_boards = result.bit_boards.map(|bit_board| bit_board.reverse_bits() >> 4);
+
+                result
+            };
+
+            // 観測結果を取得し、リターンします。
+
+            observation(&state, py)
         }
 
         // 1ステップ進め、報酬を返します。
@@ -198,37 +239,6 @@ mod quantum_animal_shogi {
             0.0
         }
 
-        // 環境をリセットします。
-
-        fn reset(&mut self) {
-            self.state = Game::initial_state();
-        }
-
-        // 観測を実施します。
-
-        fn observe<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-            observation(&self.state, py)
-        }
-
-        // 勝敗が決した後に盤面を観測できるよう、回転させた状態での観測を実施します。
-
-        fn observe_turned<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-            // 盤面を回転した状態を取得します。
-
-            let state = {
-                let mut result = self.state.clone();
-
-                result.ownership = !result.ownership;
-                result.bit_boards = result.bit_boards.map(|bit_board| bit_board.reverse_bits() >> 4);
-
-                result
-            };
-
-            // 観測結果を取得し、リターンします。
-
-            observation(&state, py)
-        }
-
         // 勝ったかどうかを取得します。
 
         fn won(&self) -> bool {
@@ -257,7 +267,6 @@ mod quantum_animal_shogi {
             result.set_item("pieces", pyo3::types::PyBytes::new(py, &self.state.pieces))?;
             result.set_item("ownership", self.state.ownership)?;
             result.set_item("bit_boards", self.state.bit_boards.to_vec())?;
-            result.set_item("turn", self.state.turn)?;
 
             Ok(result)
         }
@@ -278,15 +287,12 @@ mod quantum_animal_shogi {
                 result
             };
 
-            let turn: u16 = state.get_item("turn")?.extract()?;
-
             Ok(
                 Self {
                     state: State {
                         pieces,
                         ownership,
-                        bit_boards,
-                        turn
+                        bit_boards
                     }
                 }
             )

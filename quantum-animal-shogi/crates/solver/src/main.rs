@@ -50,23 +50,19 @@ fn u128_to_state(state: &u128) -> State {
     State {
         pieces,
         ownership,
-        bit_boards,
-        turn: 0
+        bit_boards
     }
 }
 
 fn main() {
     let mut state = Game::initial_state();
-    let mut turn = 0;
 
     while !Game::won(&state) && !Game::lost(&state) {
-        if turn % 2 == 0 {
-            println!("{}", state.to_string());
-            println!();
-            println!("{}", u128_to_state(&state_to_u128(&state)).to_string());
-            println!();
-            println!();
-        }
+        println!("{}", state.to_string());
+        println!();
+        println!("{}", u128_to_state(&state_to_u128(&state)).to_string());
+        println!();
+        println!();
 
         state = {
             let mut actions = Game::legal_actions(&state);
@@ -78,6 +74,5 @@ fn main() {
 
             Game::next_state(&state, action).unwrap()
         };
-        turn += 1;
     }
 }
