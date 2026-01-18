@@ -9,7 +9,7 @@ IMAGE_SIZE = 64
 
 
 animal_images = list(map(
-    lambda name: pygame.transform.scale(pygame.image.load(f"{os.path.dirname(__file__)}/res/{name}.png"), (IMAGE_SIZE, IMAGE_SIZE)),
+    lambda name: pygame.transform.scale(pygame.image.load(f"{os.path.dirname(__file__)}/res/{name}.bmp"), (IMAGE_SIZE, IMAGE_SIZE)),
     ["chick", "giraffe", "elephant", "lion", "chicken"]
 ))
 
