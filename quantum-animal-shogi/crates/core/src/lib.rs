@@ -59,7 +59,7 @@ pub struct State {
     pub pieces: [u8; 8],       // 駒（先手由来×4 + 後手由来×4）
     pub ownership: u8,         // 駒を所有しているか
     pub bit_boards: [u16; 8],  // 駒単位の盤面（持ち駒は、対応するbit_boardが0になります）
-    pub turn: u16              // ターン（0, 1, 2, ...）
+    // pub turn: u16              // ターン（0, 1, 2, ...）
 }
 
 impl fmt::Display for State {
@@ -81,21 +81,21 @@ impl fmt::Display for State {
             format!("{}{}{}", string, if (0..4).contains(&index) { "△" } else { "▽" }, " ".repeat(11 - string.width()))
         };
 
-        let (ownership, bit_boards) = (|| {
-            if self.turn % 2 == 0 {
-                return (self.ownership, self.bit_boards);
-            }
+        // let (ownership, bit_boards) = (|| {
+        //     if self.turn % 2 == 0 {
+        //         return (self.ownership, self.bit_boards);
+        //     }
 
-            (!self.ownership, self.bit_boards.map(|bit_board| bit_board.reverse_bits() >> 4))
-        })();
+        //     (!self.ownership, self.bit_boards.map(|bit_board| bit_board.reverse_bits() >> 4))
+        // })();
 
         write!(
             f,
             "{}",
             empty()
                 .chain(
-                    bits(!ownership)
-                        .filter(|index| bit_boards[*index] == 0)
+                    bits(!self.ownership)
+                        .filter(|index| self.bit_boards[*index] == 0)
                         .map(state_string)
                 )
                 .chain(once("-".repeat((2 + 11 + 2) * 3 + 2 * 2).to_string()))
@@ -106,11 +106,11 @@ impl fmt::Display for State {
                             (0..3)
                                 .into_iter()
                                 .map(|c| {
-                                    let Some(index) = bit_boards.iter().position(|bit_board| bit_board & 1 << (r * 3 + c) != 0) else {
+                                    let Some(index) = self.bit_boards.iter().position(|bit_board| bit_board & 1 << (r * 3 + c) != 0) else {
                                         return " ".repeat(2 + 11 + 2).to_string();
                                     };
 
-                                    format!("{}{}", if ownership & 1 << index != 0 { "▲" } else { "▼" }, state_string(index))
+                                    format!("{}{}", if self.ownership & 1 << index != 0 { "▲" } else { "▼" }, state_string(index))
                                 })
                                 .rev()
                                 .join("　")
@@ -119,8 +119,8 @@ impl fmt::Display for State {
                 )
                 .chain(once("-".repeat((2 + 11 + 2) * 3 + 2 * 2).to_string()))
                 .chain(
-                    bits(ownership)
-                        .filter(|index| bit_boards[*index] == 0)
+                    bits(self.ownership)
+                        .filter(|index| self.bit_boards[*index] == 0)
                         .map(state_string)
                 )
                 .join("\n")
