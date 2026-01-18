@@ -84,8 +84,8 @@ fn main() {
 
     while let Some(state) = deque.pop_back() {
         if Game::won(&state) || Game::lost(&state) {
-            println!("{}", state.to_string());
-            println!();
+            // println!("{}", state.to_string());
+            // println!();
 
             continue;
         }
