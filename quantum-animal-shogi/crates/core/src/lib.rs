@@ -97,7 +97,7 @@ impl fmt::Display for State {
                             (0..3)
                                 .into_iter()
                                 .map(|c| {
-                                    let Some(index) = self.bit_boards.iter().position(|bit_board| bit_board & 1 << (r * 3 + c) != 0) else {
+                                    let Some(index) = self.bit_boards.iter().position(|bit_board| bit_board & 1 << r * 3 + c != 0) else {
                                         return " ".repeat(2 + 11 + 2).to_string();
                                     };
 
@@ -255,14 +255,8 @@ impl Game {
 
     // 次のステートを取得します。
 
-    pub fn next_state(state: &State, action: (u8, u8)) -> Option<State> {
+    pub fn next_state(state: &State, action: (u8, u8)) -> State {
         let mut result = state.clone();
-
-        // 合法手であることをチェックします。
-
-        if !Game::legal_actions(&state).contains(&action) {
-            return None;
-        }
 
         // 次のステートを取得します。
 
@@ -354,7 +348,7 @@ impl Game {
 
         // 次のステートを返します。
 
-        Some(result)
+        result
     }
 
     // トライに成功して勝ったかを取得します。

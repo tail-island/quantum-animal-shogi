@@ -220,11 +220,15 @@ mod quantum_animal_shogi {
                 }
             };
 
-            let Some(next_state) = Game::next_state(&self.state, action) else {
-                return -1.0;  // 不正なアクションは反則負けとします。
-            };
+            // 合法手であることをチェックします。
 
-            self.state = next_state;
+            if !Game::legal_actions(&self.state).contains(&action) {
+                return -1.0;  // 不正なアクションは反則負けとします。
+            }
+
+            // 状態を遷移します。
+
+            self.state = Game::next_state(&self.state, action);
 
             if Game::won(&self.state) {
                 return -1.0;  // 次の状態での手番は敵なので、敵が勝ったら自分の負けになります。

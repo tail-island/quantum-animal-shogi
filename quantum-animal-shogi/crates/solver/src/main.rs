@@ -1,29 +1,46 @@
-use std::{collections::{HashSet, VecDeque}, iter::once};
+use std::{collections::{BTreeSet, VecDeque}, iter::once, ops::BitOr};
 
-use quantum_animal_shogi_core::{Game, State};
+use itertools::Itertools;
+use quantum_animal_shogi_core::{Game, State, bits};
 
-fn state_to_u128(state: &State) -> u128 {
-    (0..8)
+
+// 以下を参照して作成しました。
+//
+// [「どうぶつしょうぎ」の完全解析](https://www.tanaka.ecc.u-tokyo.ac.jp/ktanaka/dobutsushogi/animal-private.pdf)
+
+
+// 状態をu128に変換します。
+
+fn convert_state_to_u128(state: &State) -> u128 {
+    let pieces: [u128; 8] = (0..8)
         .into_iter()
-        .map(|i| {
-            let mut result = 0_u16;
+        .map(|i| state.pieces[i] as u128 | if state.pieces[i].count_ones() == 1 || i < 4 { 0 } else { 1 } << 5 | if state.ownership & 1 << i != 0 { 0 } else { 1 } << 6)
+        .collect_array()
+        .unwrap();
 
-            result |= state.pieces[i] as u16;
-            result |= (if state.ownership & 1 << i != 0 { 1 } else { 0 }) << 6;
-            result |= (if state.bit_boards[i] == 0 { 4 * 3 } else { state.bit_boards[i].trailing_zeros() as u16 }) << (6 + 1);
+    let result_0 = (0..8)
+        .into_iter()
+        .filter(|i| state.bit_boards[*i] != 0)
+        .map(|i| pieces[i] << 7 * state.bit_boards[i].trailing_zeros())
+        .fold(0, BitOr::bitor);
 
-            (i, result)
-        })
-        .fold(
-            0,
-            |acc, (i, piece_state)| acc | (piece_state as u128) << (i * 11)
-        )
+    let result_1 = (0..8)
+        .into_iter()
+        .filter(|i| state.bit_boards[*i] == 0)
+        .map(|i| pieces[i])
+        .sorted()
+        .enumerate()
+        .fold(0, |acc, (i, piece)| acc | piece << 7 * i);
+
+    result_0 | result_1 << 84
 }
 
-// fn u128_to_state(state: &u128) -> State {
+// u128を状態に変換します。
+
+// fn convert_u128_to_state(state: &u128) -> State {
 //     let iter = (0..8)
 //         .into_iter()
-//         .map(|i| (state >> (i * 11)) as u16 & 0b_0000_0111_1111_1111);
+//         .map(|i| (state >> i * 11) as u16 & 0b_0000_0111_1111_1111);
 
 //     let pieces = iter
 //         .clone()
@@ -39,7 +56,7 @@ fn state_to_u128(state: &State) -> u128 {
 
 //     let bit_boards = iter
 //         .map(|piece_state| {
-//             let position = piece_state >> (6 + 1) & 0b_0000_0000_0000_1111;
+//             let position = piece_state >> 6 + 1 & 0b_0000_0000_0000_1111;
 
 //             if position == 4 * 3 { 0 } else { 1 << position }
 //         })
@@ -53,7 +70,9 @@ fn state_to_u128(state: &State) -> u128 {
 //     }
 // }
 
-fn left_right_turned(state: &State) -> State {
+// 盤面を左右反転します。
+
+fn turn_left_right(state: &State) -> State {
     let mut result = *state;
 
     result.bit_boards = state.bit_boards
@@ -74,34 +93,78 @@ fn left_right_turned(state: &State) -> State {
     result
 }
 
+// 勝負がついたかを取得します。
+
+fn is_terminal_state(state: &State) -> bool {
+    // すべての駒が確定しているなら、「どうぶつしょうぎ」の強解決結果に含まれるならそれを活用できるし、そうでなくてもu64で状態を表して別途探索すれば良いので、終端局面とします。
+
+    if state.pieces.iter().all(|piece| piece.count_ones() == 1) {
+        return true;
+    }
+
+    // 敵のライオンを取れるなら勝ち確定局面とします。
+
+    for action in Game::legal_actions(&state) {
+        let next_state = Game::next_state(&state, action);
+
+        if bits(!next_state.ownership).any(|index| next_state.bit_boards[index] == 0 && next_state.pieces[index] == 0b_0000_1000) {
+            return true;
+        }
+    }
+
+    // 勝ち確定局面ではない場合で、敵のライオンの可能性を持つ駒が自陣にいれば負け確定局面とします。
+
+    if bits(!state.ownership).any(|index| state.bit_boards[index] & 0b_000_000_000_111 != 0 && state.pieces[index] & 0b_0000_1000 != 0) {
+        return true;
+    }
+
+    // どちらでもなければ、終端局面ではありません。
+
+    false
+}
+
+// メイン・ルーチンです。
+
 fn main() {
-    let (mut deque, mut states) = {
-        let result_0 = once(Game::initial_state()).collect::<VecDeque<_>>();
-        let result_1 = result_0.clone().iter().map(state_to_u128).collect::<HashSet<_>>();
+    let (mut stack, mut visited) = {
+        // りょうしどうぶつしょうぎの初期状態を設定します。
+
+        let state = Game::initial_state();
+
+        // 「どうぶつしょうぎ」の初期状態を設定します。この場合で「どうぶつしょうぎ」の完全解析と同じ結果になるなら、処理は概ね正しいはず。 ← 12分で探索が終了し、246,803,167で一致した！
+
+        // let state = State {
+        //     pieces:     [0b_0_0010, 0b_0_1000, 0b_0_0100, 0b_0_0001, 0b_0_0001, 0b_0_0100, 0b_0_1000, 0b_0_0010],
+        //     ownership:  0b_0000_1111,
+        //     bit_boards: [0b_000_000_000_001, 0b_000_000_000_010, 0b_000_000_000_100, 0b_000_000_010_000, 0b_000_010_000_000, 0b_001_000_000_000, 0b_010_000_000_000, 0b_100_000_000_000]
+        // };
+
+        let result_0 = once(state).collect::<VecDeque<_>>();
+        let result_1 = result_0.clone().iter().map(convert_state_to_u128).collect::<BTreeSet<_>>();
 
         (result_0, result_1)
     };
 
-    while let Some(state) = deque.pop_back() {
-        if Game::won(&state) || Game::lost(&state) {
-            // println!("{}", state.to_string());
-            // println!();
-
+    while let Some(state) = stack.pop_back() {
+        if is_terminal_state(&state) {
             continue;
         }
 
         for action in Game::legal_actions(&state) {
-            let next_state = Game::next_state(&state, action).unwrap();
-            let next_state_u128 = [state_to_u128(&next_state), state_to_u128(&left_right_turned(&state))].into_iter().min().unwrap();
+            let next_state = Game::next_state(&state, action);
 
-            if states.contains(&next_state_u128) {
+            let next_state_u128 = [convert_state_to_u128(&next_state), convert_state_to_u128(&turn_left_right(&next_state))].into_iter().min().unwrap();
+
+            if visited.contains(&next_state_u128) {
                 continue;
             }
 
-            states.insert(next_state_u128);
-            deque.push_back(next_state);
+            visited.insert(next_state_u128);
+            stack.push_back(next_state);
+
+            println!("{}", visited.len());
         }
     }
 
-    println!("{}", states.len());
+    println!("{}", visited.len());
 }
