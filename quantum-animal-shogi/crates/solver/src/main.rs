@@ -35,41 +35,6 @@ fn convert_state_to_u128(state: &State) -> u128 {
     result_0 | result_1 << 84
 }
 
-// u128を状態に変換します。
-
-// fn convert_u128_to_state(state: &u128) -> State {
-//     let iter = (0..8)
-//         .into_iter()
-//         .map(|i| (state >> i * 11) as u16 & 0b_0000_0111_1111_1111);
-
-//     let pieces = iter
-//         .clone()
-//         .map(|piece_state| (piece_state & 0b_0000_0000_0001_1111) as u8)
-//         .collect_array()
-//         .unwrap();
-
-//     let ownership = iter
-//         .clone()
-//         .enumerate()
-//         .map(|(i, piece_state)| (if piece_state >> 6 & 0b_0000_0000_0000_0001 != 0 { 1 } else { 0 }) << i)
-//         .fold(0, BitOr::bitor);
-
-//     let bit_boards = iter
-//         .map(|piece_state| {
-//             let position = piece_state >> 6 + 1 & 0b_0000_0000_0000_1111;
-
-//             if position == 4 * 3 { 0 } else { 1 << position }
-//         })
-//         .collect_array()
-//         .unwrap();
-
-//     State {
-//         pieces,
-//         ownership,
-//         bit_boards
-//     }
-// }
-
 // 盤面を左右反転します。
 
 fn turn_left_right(state: &State) -> State {
@@ -96,7 +61,7 @@ fn turn_left_right(state: &State) -> State {
 // 勝負がついたかを取得します。
 
 fn is_terminal_state(state: &State) -> bool {
-    // すべての駒が確定しているなら、「どうぶつしょうぎ」の強解決結果に含まれるならそれを活用できるし、そうでなくてもu64で状態を表して別途探索すれば良いので、終端局面とします。
+    // すべての駒が確定しているなら、「どうぶつしょうぎ」の強解決結果に含まれるならそれを活用できるし、そうでなくてもu64で状態を表して別途探索すれば良いので、とりあえずの終端局面とします。
 
     if state.pieces.iter().all(|piece| piece.count_ones() == 1) {
         return true;
