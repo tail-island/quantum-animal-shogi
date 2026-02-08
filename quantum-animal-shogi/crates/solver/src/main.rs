@@ -58,14 +58,14 @@ fn turn_left_right(state: &State) -> State {
     result
 }
 
-// 勝負がついたかを取得します。
+// 終端局面か判断します。
 
 fn is_terminal_state(state: &State) -> bool {
-    // すべての駒が確定しているなら、「どうぶつしょうぎ」の強解決結果に含まれるならそれを活用できるし、そうでなくてもu64で状態を表して別途探索すれば良いので、とりあえずの終端局面とします。
+    // // すべての駒が確定しているなら、「どうぶつしょうぎ」の強解決結果に含まれるならそれを活用できるし、そうでなくてもu64で状態を表して別途探索すれば良いので、とりあえずの終端局面とします。
 
-    if state.pieces.iter().all(|piece| piece.count_ones() == 1) {
-        return true;
-    }
+    // if state.pieces.iter().all(|piece| piece.count_ones() == 1) {
+    //     return true;
+    // }
 
     // 敵のライオンを取れるなら勝ち確定局面とします。
 
