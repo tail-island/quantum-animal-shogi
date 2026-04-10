@@ -13,7 +13,7 @@ MAX_DEPTH = 5
 
 # 盤面の評価値を取得します。
 
-def score(board, hand):
+def get_score(board, hand):
     # 駒の価値を取得します。
 
     def piece_advantage_score(piece):
@@ -42,6 +42,7 @@ def score(board, hand):
 
 
 # アルファ・ベータ法（Wikipediaに載っていた擬似コードそのままで、特別な工夫はなし）で手を選びます。量子どうぶつしょうぎのルールには、raw_envを再利用しています。
+# https://ja.wikipedia.org/wiki/%E3%82%A2%E3%83%AB%E3%83%95%E3%82%A1%E3%83%BB%E3%83%99%E3%83%BC%E3%82%BF%E6%B3%95
 
 def alpha_beta(raw_env, depth, alpha, beta):
 #   if node が終端ノード or depth = 0  # noqa: E115
@@ -69,7 +70,7 @@ def alpha_beta(raw_env, depth, alpha, beta):
     # 指定された深さに達したら、盤面の評価値をリターンします。
 
     if depth == 0:
-        return score(board, hand), None
+        return get_score(board, hand), None
 
 #   foreach child of node
 
@@ -111,7 +112,7 @@ def alpha_beta(raw_env, depth, alpha, beta):
 
 # アルファ・ベータ法でアクションを選択します。
 
-def action(observation):
+def get_action(observation):
     return alpha_beta(raw_environment_from_observation(observation), MAX_DEPTH, -inf, inf)[1]
 
 
@@ -120,4 +121,4 @@ def action(observation):
 if __name__ == "__main__":
     from play import play
 
-    play(action)
+    play(get_action)
