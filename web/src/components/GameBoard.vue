@@ -3,14 +3,6 @@ import { useQuantumAnimalShogiStore } from '@/stores/QuantumAnimalShogiStore'
 import PieceCell from './PieceCell.vue'
 
 const store = useQuantumAnimalShogiStore()
-
-// onMounted(async () => {
-//   await new Promise((resolve) => setTimeout(resolve, 100))
-
-//   while (store.reward == 0) {
-//     await store.executeAction(store.legalActions[0]!)
-//   }
-// })
 </script>
 
 <template>
