@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use quantum_animal_shogi_core::{Game as Game_, State as State_};
+use quantum_animal_shogi_core::{Game, State as State_};
 
 // #[wasm_bindgen]
 // extern "C" {
@@ -46,7 +46,7 @@ impl From<(u8, u8)> for Action {
 #[wasm_bindgen(js_name = getInitialState)]
 pub fn get_initial_state() -> State {
     State {
-        state: Game_::initial_state()
+        state: Game::initial_state()
     }
 }
 
@@ -62,22 +62,22 @@ pub fn get_turned_state(state: &State) -> State {
 
 #[wasm_bindgen(js_name = getLegalActions)]
 pub fn get_legal_actions(state: &State) -> Vec<Action> {
-    Game_::legal_actions(&state.state).map(|action| action.into()).collect()
+    Game::legal_actions(&state.state).map(|action| action.into()).collect()
 }
 
 #[wasm_bindgen(js_name = getNextState)]
 pub fn get_next_state(state: &State, action: &Action) -> State {
-    State { state: Game_::next_state(&state.state, (action.0, action.1)) }
+    State { state: Game::next_state(&state.state, (action.0, action.1)) }
 }
 
 #[wasm_bindgen]
 pub fn won(state: &State) -> bool {
-    Game_::won(&state.state)
+    Game::won(&state.state)
 }
 
 #[wasm_bindgen]
 pub fn lost(state: &State) -> bool {
-    Game_::lost(&state.state)
+    Game::lost(&state.state)
 }
 
 fn get_score(state: &State_) -> i32 {
@@ -107,11 +107,11 @@ fn get_score(state: &State_) -> i32 {
 const MAX_DEPTH: i32 = 8;
 
 fn alpha_beta(state: &State_, depth: i32, alpha: i32, beta: i32) -> (i32, Option<(u8, u8)>) {
-    if Game_::won(state) {
+    if Game::won(state) {
         return ( 1_000 + depth, None)
     }
 
-    if Game_::lost(state) {
+    if Game::lost(state) {
         return (-1_000 - depth, None)
     }
 
@@ -122,8 +122,8 @@ fn alpha_beta(state: &State_, depth: i32, alpha: i32, beta: i32) -> (i32, Option
     let mut alpha = alpha;
     let mut action = None;
 
-    for action_prime in Game_::legal_actions(state) {
-        let state_prime = Game_::next_state(state, action_prime);
+    for action_prime in Game::legal_actions(state) {
+        let state_prime = Game::next_state(state, action_prime);
         let alpha_prime = -alpha_beta(&state_prime, depth - 1, -beta, -alpha).0;
 
         if alpha_prime > alpha {
