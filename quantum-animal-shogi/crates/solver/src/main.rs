@@ -1,6 +1,7 @@
 use std::{collections::{BTreeSet, VecDeque}, iter::once, ops::BitOr};
 
 use itertools::Itertools;
+
 use quantum_animal_shogi_core::{Game, State, bits};
 
 

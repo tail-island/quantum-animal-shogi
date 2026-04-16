@@ -1,1 +1,13 @@
-cargo build --release && Set-Location -Path crates\python && maturin develop --release && Set-Location -Path ..\.. && python .\_t.py
+try {
+    cargo build --release
+
+    try {
+        Set-Location -Path crates\python
+        maturin develop --release
+        python ..\..\_t.py
+    } finally {
+        Set-Location -Path ..\..
+    }
+} catch {
+    Write-Error "Feiled..."
+}

@@ -104,7 +104,7 @@ mod quantum_animal_shogi {
 
     // PettingZooのAECEnvを委譲で作成可能にするためのクラスです。
 
-    #[pyclass]
+    #[pyclass(from_py_object)]
     #[derive(Clone, Copy)]
     struct RawEnvironment {
         state: State
