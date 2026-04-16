@@ -11,7 +11,7 @@ const props = defineProps<{
 const store = useQuantumAnimalShogiStore()
 const canvas = ref<HTMLCanvasElement  | null>(null)
 
-const marked = computed(() => {
+const isAction1Candidate = computed(() => {
   if (!store.action0 === null) {
     return false
   }
@@ -92,7 +92,7 @@ const handleClick = () => {
     return
   }
 
-  if (marked.value) {
+  if (isAction1Candidate.value) {
     store.action1 = props.index!
     store.executeAction()
     return
@@ -120,7 +120,7 @@ watch(
     <div class="piece">
       <canvas ref="canvas" class="canvas" width="192" height="192"></canvas>
     </div>
-    <div class="marker" v-if="marked"></div>
+    <div class="marker" v-if="isAction1Candidate"></div>
   </div>
 </template>
 

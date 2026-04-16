@@ -57,7 +57,7 @@ export const useQuantumAnimalShogiStore = defineStore('state', () => {
 
     for (const [pieceIndex, bitBoard] of pipe(
       [...state.bitBoards],
-      filterMap((bitBoard, pieceIndex): [number, number] | null => bitBoard ? [pieceIndex, bitBoard] : null)
+      filterMap((bitBoard, pieceIndex) => bitBoard !== 0 ? [pieceIndex, bitBoard] as [number, number] : null)
     )) {
       setPieceState(state, pieceIndex, result[(31 - Math.clz32(bitBoard & -bitBoard))]!)
     }
@@ -70,8 +70,8 @@ export const useQuantumAnimalShogiStore = defineStore('state', () => {
 
     for (const [pieceIndex, i] of pipe(
       [...state.bitBoards],
-      filterMap((bitBoard, pieceIndex) => !bitBoard && ((state.ownership & (1 << pieceIndex)) !== 0) === ownership ? pieceIndex : null),
-      map((pieceIndex, i): [number, number] => [pieceIndex, i])
+      filterMap((bitBoard, pieceIndex) => !bitBoard && ((state.ownership & (1 << pieceIndex)) !== 0) === ownership ? {value: pieceIndex} : null),
+      map((pieceIndex, i): [number, number] => [pieceIndex.value, i])
     )) {
       setPieceState(state, pieceIndex, result[i]!)
     }
