@@ -8,10 +8,6 @@ const props = defineProps<{
   index: number | null
 }>()
 
-const emit = defineEmits<{
-  select: [index: number]
-}>()
-
 const store = useQuantumAnimalShogiStore()
 const canvas = ref<HTMLCanvasElement  | null>(null)
 

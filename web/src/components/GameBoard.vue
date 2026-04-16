@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useQuantumAnimalShogiStore } from '@/stores/QuantumAnimalShogiStore'
 import PieceCell from './PieceCell.vue'
-import { markRaw, onMounted } from 'vue'
 
 const store = useQuantumAnimalShogiStore()
 
