@@ -1,8 +1,11 @@
+import asyncio
 import numpy as np
 import os
 import pygame
+import sys
 
-from quantum_animal_shogi import Environment
+from . import Environment
+from .game import create_agent
 
 
 IMAGE_SIZE = 64
@@ -122,7 +125,7 @@ def create_candidates_surface(candidates):
     return result
 
 
-def play(action_fn):
+async def play(enemy):
     pygame.init()
     pygame.display.set_caption("りょうしどうぶつしょうぎ")
     screen = pygame.display.set_mode((9 * 3 * IMAGE_SIZE, 4 * 3 * IMAGE_SIZE))
@@ -177,6 +180,8 @@ def play(action_fn):
 
                         return result_0 * (4 * 3) + action_item
 
+    result = {}
+
     env = Environment(render_mode="human")
     env.reset()
 
@@ -184,15 +189,43 @@ def play(action_fn):
         observation, reward, termination, truncation, info = env.last()
 
         if termination or truncation:
-            print(f"{agent}\t{reward: }")
+            result[agent] = reward
             env.step(None)
             continue
 
         match agent:
-            case "player_0": action = select_action(observation)
-            case "player_1": action = action_fn(observation)
+            case "agent_0": action = select_action(observation)
+            case "agent_1": action = await enemy.get_action(observation)
 
         env.step(action)
 
     env.close()
+
+    try:
+        await enemy.end_game()
+    except Exception:
+        pass
+
     pygame.quit()
+
+    return result
+
+
+async def main(agent_command):
+    rewards = await play(
+        await create_agent(agent_command, open("./agent-1.log", mode="w"))
+    )
+
+    for _, reward in sorted(rewards.items()):
+        print(f"{reward: }", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser()
+    parser.add_argument("agent")
+
+    args = parser.parse_args()
+
+    asyncio.run(main(args.agent))

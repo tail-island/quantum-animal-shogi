@@ -2,6 +2,7 @@ from copy import copy
 from functools import lru_cache
 from gymnasium.spaces import Box, Dict, Discrete, MultiBinary
 from pettingzoo import AECEnv
+from sys import stdout
 
 from .quantum_animal_shogi import RawEnvironment
 
@@ -15,7 +16,7 @@ class Environment(AECEnv):
         self.raw_env = RawEnvironment()  # メモリ効率を良くしたい場合は、本コードを参考にRawEnvironmentの使用を検討してください。呼び出しが変わるので、面倒だけど……。
 
         self.render_mode = render_mode
-        self.possible_agents = ["player_0", "player_1"]
+        self.possible_agents = ["agent_0", "agent_1"]
 
     @lru_cache(maxsize=None)
     def action_space(self, agent):
@@ -36,6 +37,7 @@ class Environment(AECEnv):
     def render(self):
         self.raw_env.render(self.turn)
         print()
+        stdout.flush()
 
     def reset(self, seed=None, options=None):
         self.raw_env.reset()
@@ -64,6 +66,15 @@ class Environment(AECEnv):
 
         reward = self.raw_env.step(action)
         self.turn += 1
+
+        if self.turn >= 256:  # 手数が閾値を超えた場合です。
+            self.observations[self.agents[(self.agents.index(self.agent_selection) + 0) % 2]] = self.get_observation(self.raw_env.observe_turned())
+
+            self.rewards[self.agents[0]] = -0.5
+            self.rewards[self.agents[1]] = -0.5
+
+            self.truncations[self.agents[0]] = True
+            self.truncations[self.agents[1]] = True
 
         if reward != 0:  # 勝敗が決定した場合です。
             self.observations[self.agents[(self.agents.index(self.agent_selection) + 0) % 2]] = self.get_observation(self.raw_env.observe_turned())

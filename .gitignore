@@ -1,3 +1,7 @@
 __pycache__/
 *.py[cod]
 *.pdb
+
+/agent-0.log
+/agent-1.log
+/game.log

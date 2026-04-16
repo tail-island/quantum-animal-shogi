@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 from copy import copy
 from itertools import starmap
@@ -113,12 +114,18 @@ def alpha_beta(raw_env, depth, alpha, beta):
 # アルファ・ベータ法でアクションを選択します。
 
 def get_action(observation):
-    return alpha_beta(raw_environment_from_observation(observation), MAX_DEPTH, -inf, inf)[1]
+    alpha, action = alpha_beta(raw_environment_from_observation(observation), MAX_DEPTH, -inf, inf)
+
+    # ログは、標準エラー出力に出力してください。
+
+    print(f"{action}\t{alpha}", file=sys.stderr)
+
+    return action
 
 
 # 自己対戦させてみます。
 
 if __name__ == "__main__":
-    from play import play
+    from adapter import execute
 
-    play(get_action)
+    execute(get_action)

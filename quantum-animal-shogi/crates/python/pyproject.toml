@@ -9,7 +9,8 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "numpy",
-    "pettingzoo"
+    "pettingzoo",
+    "pygame"
 ]
 
 [build-system]
