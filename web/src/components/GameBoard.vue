@@ -47,6 +47,7 @@ const store = useQuantumAnimalShogiStore()
     <div class="cell piece-cell hand-cell" ><PieceCell :piece-state="store.allyHands[0]!"  :index="12"   /></div>
     <div class="cell piece-cell hand-cell" ><PieceCell :piece-state="store.allyHands[1]!"  :index="13"   /></div>
   </div>
+  <p class="reward" v-if="store.reward">reward = {{ store.reward }}</p>
 </template>
 
 <style scoped>
@@ -74,5 +75,9 @@ const store = useQuantumAnimalShogiStore()
 
 .hand-cell {
   border: 1px solid #c0c0c0;
+}
+
+.reward {
+  text-align: center;;
 }
 </style>

@@ -31,6 +31,11 @@ impl State {
     pub fn bit_boards(&self) -> Vec<u16> {
         self.state.bit_boards.into()
     }
+
+    #[wasm_bindgen(getter)]
+    pub fn turn(&self) -> u16 {
+        self.state.turn
+    }
 }
 
 #[derive(Tsify, Serialize, Deserialize)]
@@ -80,6 +85,11 @@ pub fn lost(state: &State) -> bool {
     Game::lost(&state.state)
 }
 
+#[wasm_bindgen]
+pub fn draw(state: &State) -> bool {
+    Game::draw(&state.state)
+}
+
 fn get_score(state: &State_) -> i32 {
     let get_piece_advantage_score = |piece: u8| {
         [1, 4, 5, 100, 10]
@@ -111,7 +121,7 @@ fn alpha_beta(state: &State_, depth: i32, alpha: i32, beta: i32) -> (i32, Option
         return ( 1_000 + depth, None)
     }
 
-    if Game::lost(state) {
+    if Game::lost(state) || Game::draw(state) {
         return (-1_000 - depth, None)
     }
 

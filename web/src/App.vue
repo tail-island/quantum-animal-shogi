@@ -18,7 +18,7 @@ onMounted(async () => {
   </main>
 </template>
 
-<style scoped>
+<style>
 body {
   font-family: Arial;
   font-size: 14px;

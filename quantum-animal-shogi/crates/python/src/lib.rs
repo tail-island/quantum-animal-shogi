@@ -99,6 +99,10 @@ mod quantum_animal_shogi {
             }
         )?;
 
+        // 手数。
+
+        result.set_item("turn", state.turn)?;
+
         Ok(result)
     }
 
@@ -124,7 +128,7 @@ mod quantum_animal_shogi {
         // 観測結果からRawEnvironmentを作成します。
 
         #[staticmethod]
-        fn from_observation(observation: PyReadonlyArray2<f32>) -> Self {
+        fn from_observation(observation: PyReadonlyArray2<f32>, turn: u16) -> Self {
             let observation: SMatrix<f32, 9, 20>  = SMatrix::from_column_slice(observation.as_slice().unwrap());
 
             let indices = empty()
@@ -153,14 +157,14 @@ mod quantum_animal_shogi {
                 .unwrap();
 
             Self {
-                state: State { pieces, ownership, bit_boards }
+                state: State { pieces, ownership, bit_boards, turn }
             }
         }
 
         // 状態を描画します。
 
-        fn render(&self, turn: u32) {
-            let state = if turn % 2 == 0 {
+        fn render(&self) {
+            let state = if self.state.turn % 2 == 0 {
                 self.state
             } else {
                 let mut result = self.state.clone();
@@ -238,7 +242,9 @@ mod quantum_animal_shogi {
                 return  1.0;  // 次の状態での手番は敵なので、敵が負けたら自分の勝ちになります。
             }
 
-            // Stateの肥大化を防ぐために、千日手は対象外としています。
+            if Game::draw(&self.state) {
+                return -0.5;  // 引き分けは
+            }
 
             0.0
         }
@@ -253,6 +259,12 @@ mod quantum_animal_shogi {
 
         fn lost(&self) -> bool {
             Game::lost(&self.state)
+        }
+
+        // 引き分けかどうかを取得します。
+
+        fn draw(&self) -> bool {
+            Game::draw(&self.state)
         }
 
         // Pythonで状態として保存でき量にするために、copyとdeepcopy、piekleに対応させます。
@@ -271,6 +283,7 @@ mod quantum_animal_shogi {
             result.set_item("pieces", pyo3::types::PyBytes::new(py, &self.state.pieces))?;
             result.set_item("ownership", self.state.ownership)?;
             result.set_item("bit_boards", self.state.bit_boards.to_vec())?;
+            result.set_item("state", self.state.turn)?;
 
             Ok(result)
         }
@@ -291,12 +304,15 @@ mod quantum_animal_shogi {
                 result
             };
 
+            let turn = state.get_item("turn")?.extract::<u16>()?;
+
             Ok(
                 Self {
                     state: State {
                         pieces,
                         ownership,
-                        bit_boards
+                        bit_boards,
+                        turn
                     }
                 }
             )

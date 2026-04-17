@@ -55,9 +55,9 @@ def alpha_beta(raw_env, depth, alpha, beta):
         return float_info.max, None
         # return  1_000 + depth, None  # こちらだと、遠回りせずに勝ちにいきます。βカットの効率は落ちると思うけど。。。
 
-    # 負けたら（終端ノードなら）最小スコアを返します。
+    # 負けもしくは引き分けなら（終端ノードなら）最小スコアを返します。
 
-    if raw_env.lost():
+    if raw_env.lost() or raw_env.draw():
         return -float_info.max, None
         # return -1_000 - depth, None  # こちらだと、負けをできるだけ遠ざけます。βカットの効率は落ちると思うけど。。。
 
@@ -127,5 +127,9 @@ def get_action(observation):
 
 if __name__ == "__main__":
     from adapter import execute
+
+    # 何らかの識別子をログ出力しておくと、事務局がステージングで失敗したときに文句を言えるので便利です。
+
+    print("*** alpha_beta ***", file=sys.stderr)
 
     execute(get_action)

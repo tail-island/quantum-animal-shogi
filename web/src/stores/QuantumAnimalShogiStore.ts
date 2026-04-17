@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getAction, getInitialState, getLegalActions, getNextState, getTurnedState, won, lost } from 'quantum-animal-shogi-webasm'
+import { getAction, getInitialState, getLegalActions, getNextState, getTurnedState, won, lost, draw } from 'quantum-animal-shogi-webasm'
 import type { Action, State } from 'quantum-animal-shogi-webasm'
 import { computed, nextTick, ref } from 'vue'
 import { filterMap, map, pipe } from 'rambda'
@@ -93,11 +93,15 @@ export const useQuantumAnimalShogiStore = defineStore('state', () => {
     isMyTurn.value = !isMyTurn.value
 
     if (won(state.value)) {
-      reward.value = isMyTurn.value ? -1 : 1
+      reward.value = isMyTurn.value ? 1 : -1
     }
 
     if (lost(state.value)) {
-      reward.value = isMyTurn.value ? 1 : -1
+      reward.value = isMyTurn.value ? -1 : 1
+    }
+
+    if (draw(state.value)) {
+      reward.value = -0.5
     }
 
     await nextTick()

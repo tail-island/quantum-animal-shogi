@@ -120,7 +120,7 @@ watch(
     <div class="piece">
       <canvas ref="canvas" class="canvas" width="192" height="192"></canvas>
     </div>
-    <div class="marker" v-if="isAction1Candidate"></div>
+    <div class="action-1-candidate" v-if="isAction1Candidate"></div>
   </div>
 </template>
 
@@ -133,7 +133,7 @@ watch(
 }
 
 .piece {
-  position: relative;
+  position: absolute;
   inset: 0;
 }
 
@@ -142,7 +142,7 @@ watch(
   width: 100%;
 }
 
-.marker {
+.action-1-candidate {
   position: absolute;
   background-color: rgba(128, 128, 255, 0.5);
   inset: 0;
