@@ -98,6 +98,8 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
         return torch.from_numpy(x)
 
     def predict(self, env):
+        # 入力を作成します。
+
         xs = torch.stack([self.env_to_x(env)])
 
         if device == "cuda":
