@@ -1,0 +1,4 @@
+coloredlogs==15.0.1
+tqdm==4.67.3
+torch==2.11.0
+
