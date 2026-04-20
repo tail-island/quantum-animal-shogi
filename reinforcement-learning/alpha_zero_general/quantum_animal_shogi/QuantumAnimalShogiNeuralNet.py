@@ -85,11 +85,9 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
         hand = np.ravel(np.concat([hand[hand_indices][1:], np.eye(8, dtype=np.float32)[hand_indices][1:]], axis=1))
         hand = np.broadcast_to(hand[None, :], [12, 119])
 
-        x = np.concatenate([board, hand], axis=1)
-
         x = np.permute_dims(
             np.reshape(
-                x,
+                np.concatenate([board, hand], axis=1),
                 [4, 3, 1 * (5 + 2 + 2) + 7 * (5 + 2 + 2 + 8)]
             ),
             [2, 0, 1]
