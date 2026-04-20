@@ -69,7 +69,7 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
         self.nn_module = NNModule(self.game)
 
         if device == "cuda":
-            self.nnet.cuda()
+            self.nn_module.cuda()
 
     def env_to_x(self, env):
         # 観測結果を取得します。
@@ -98,21 +98,21 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
         return torch.from_numpy(x)
 
     def predict(self, env):
-        x = self.env_to_x(env).view(1, 1 * (5 + 2 + 2) + 7 * (5 + 2 + 2 + 8), 4, 3)
+        xs = torch.stack([self.env_to_x(env)])
 
         if device == "cuda":
-            x.cuda()
+            xs.cuda()
 
         # ニューラル・ネットワークを使用して予測します。
 
         self.nn_module.eval()
 
         with torch.no_grad():
-            p, v = self.nn_module(x)
+            ps, vs = self.nn_module(xs)
 
         # ポリシーとバリューをリターンします。
 
-        return torch.exp(p).data.cpu().numpy()[0], v.data.cpu().numpy()[0]
+        return torch.exp(ps).data.cpu().numpy()[0], vs.data.cpu().numpy()[0]
 
     def get_loss_p(self, targets, outputs):
         return -torch.sum(targets * outputs) / targets.size()[0]
