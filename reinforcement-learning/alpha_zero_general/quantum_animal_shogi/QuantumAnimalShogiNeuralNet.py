@@ -123,16 +123,14 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
     def train(self, examples):
         optimizer = optim.Adam(self.nn_module.parameters())
 
-        for epoch in range(NUMBER_OF_EPOCHS):
-            print('EPOCH ::: ' + str(epoch + 1))
-
+        for _ in range(NUMBER_OF_EPOCHS):
             self.nn_module.train()
 
             loss_ps = AverageMeter()
             loss_vs = AverageMeter()
 
             batch_count = len(examples) // BATCH_SIZE
-            t = tqdm(range(batch_count), desc='Training Net')
+            t = tqdm(range(batch_count), desc="Training Net", ascii=True)
 
             for _ in t:
                 xs, ps_true, vs_true = list(zip(*[examples[i] for i in np.random.randint(len(examples), size=BATCH_SIZE)]))
@@ -160,22 +158,22 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
                 total_loss.backward()
                 optimizer.step()
 
-    def save_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
+    def save_checkpoint(self, folder="checkpoint", filename="checkpoint.pth.tar"):
         path = os.path.join(folder, filename)
 
         if not os.path.exists(folder):
             print("Checkpoint Directory does not exist! Making directory {}".format(folder))
             os.mkdir(folder)
 
-        torch.save({'state_dict': self.nn_module.state_dict()}, path)
+        torch.save({"state_dict": self.nn_module.state_dict()}, path)
 
-    def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
+    def load_checkpoint(self, folder="checkpoint", filename="checkpoint.pth.tar"):
         path = os.path.join(folder, filename)
 
         if not os.path.exists(path):
             raise ("No model in path {}".format(path))
 
-        map_location = None if device == "cuda" else 'cpu'
+        map_location = None if device == "cuda" else "cpu"
         checkpoint = torch.load(path, map_location=map_location)
 
-        self.nn_module.load_state_dict(checkpoint['state_dict'])
+        self.nn_module.load_state_dict(checkpoint["state_dict"])

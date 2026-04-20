@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -e
+
+{
+  cargo build --release
+
+  (
+    cd crates/python || exit 1
+    maturin develop --release
+    python ../../_t.py
+  )
+} || {
+  echo "Feiled..." >&2
+}
