@@ -79,7 +79,7 @@ mod quantum_animal_shogi {
             {
                 // "action_mask"は1次元のMultiBinaryがPettingZooのおすすめみたいなので、選択可能なアクションのインデックスをTrueにしたNumPy配列を作成します。1次元のMultiBinaryにするために、アクションは(u8, u8)ではなく、u16にします。で、action.0 << 4 | action.1だと膨大な数の配列になってしまうので、action.0 * 12 + action.1にします。
 
-                let mut result = Array1::<i8>::zeros(((4 * 3) + 8) * (4 * 3));
+                let mut result = Array1::<i8>::zeros((4 * 3 + 8) * 4 * 3);
 
                 for action in Game::legal_actions(&state) {
                     // Python側の座標系（Rust側では0は盤面の右下ですが、Python側では左上）に合うように、アクションを変更します。
@@ -243,7 +243,7 @@ mod quantum_animal_shogi {
             }
 
             if Game::draw(&self.state) {
-                return -0.5;  // 引き分けは
+                return -0.5;  // 千日手を避けたいので、引き分けは半分負けとして扱います。
             }
 
             0.0

@@ -114,6 +114,11 @@ def alpha_beta(raw_env, depth, alpha, beta):
 # アルファ・ベータ法でアクションを選択します。
 
 def get_action(observation):
+    # if observation["turn"] // 2 % 2 == 0:
+    #     return 11 * 4 * 3 + 8
+    # else:
+    #     return 8 * 4 * 3 + 11
+
     alpha, action = alpha_beta(raw_environment_from_observation(observation), MAX_DEPTH, -inf, inf)
 
     # ログは、標準エラー出力に出力してください。
