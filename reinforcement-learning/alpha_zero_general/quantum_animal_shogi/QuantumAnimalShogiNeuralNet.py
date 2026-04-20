@@ -66,10 +66,7 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
         super().__init__(game)
 
         self.game = game
-        self.nn_module = NNModule(self.game)
-
-        if device == "cuda":
-            self.nn_module.cuda()
+        self.nn_module = NNModule(self.game).to(device)
 
     def env_to_x(self, env):
         # 観測結果を取得します。
@@ -98,10 +95,7 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
     def predict(self, env):
         # 入力を作成します。
 
-        xs = torch.stack([self.env_to_x(env)])
-
-        if device == "cuda":
-            xs.cuda()
+        xs = torch.stack([self.env_to_x(env)]).to(device)
 
         # ニューラル・ネットワークを使用して予測します。
 
@@ -135,12 +129,9 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
             for _ in t:
                 xs, ps_true, vs_true = list(zip(*[examples[i] for i in np.random.randint(len(examples), size=BATCH_SIZE)]))
 
-                xs = torch.stack([self.env_to_x(env) for env in xs])
-                ps_true = torch.from_numpy(np.array(ps_true, dtype=np.float32))
-                vs_true = torch.from_numpy(np.array(vs_true, dtype=np.float32))
-
-                if device == "cuda":
-                    xs, ps_true, vs_true = xs.cuda(), ps_true.cuda(), vs_true.cuda()
+                xs = torch.stack([self.env_to_x(env) for env in xs]).to(device)
+                ps_true = torch.from_numpy(np.array(ps_true, dtype=np.float32)).to(device)
+                vs_true = torch.from_numpy(np.array(vs_true, dtype=np.float32)).to(device)
 
                 ps_pred, vs_pred = self.nn_module(xs)
 
@@ -173,7 +164,6 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
         if not os.path.exists(path):
             raise ("No model in path {}".format(path))
 
-        map_location = None if device == "cuda" else "cpu"
-        checkpoint = torch.load(path, map_location=map_location)
+        checkpoint = torch.load(path)
 
         self.nn_module.load_state_dict(checkpoint["state_dict"])
