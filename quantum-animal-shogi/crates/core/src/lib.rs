@@ -370,7 +370,7 @@ impl Game {
     // ライオンがキャッチされたか、合法種がなくなって負けたかを取得します。
 
     pub fn lost(state: &State) -> bool {
-        bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)
+        bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] & 0b_0000_1000 != 0)
     }
 
     // 手数が256手になって引き分けになったかを取得します。「千日手」はStateが大きくなってしまうので、実装していません。
