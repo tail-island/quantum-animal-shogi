@@ -164,6 +164,6 @@ class QuantumAnimalShogiNeuralNet(NeuralNet):
         if not os.path.exists(path):
             raise ("No model in path {}".format(path))
 
-        checkpoint = torch.load(path)
+        checkpoint = torch.load(path, None if torch.cuda.is_available() else "cpu")
 
         self.nn_module.load_state_dict(checkpoint["state_dict"])

@@ -209,38 +209,39 @@ impl Game {
 
                 // 駒の可能性の組み合わせの全てで、ループを回します。
 
-                for target_piece in 0b_0001..0b_1111 {
-                    // 組み合わせ通りの駒の数を数えます。
+                for target in 0b_0001..0b_1111 {
+                    // 駒の可能性を持つ駒を取得します。
 
-                    let number_of_pieces = pieces
-                        .iter()
-                        .filter(|piece| **piece == target_piece)
-                        .count() as u32;
-
-                    // 組み合わせ通り駒の数が、その可能性を満たす駒の数（どうぶつしょうぎは4種4駒だから立っているビットの数と同じ）より小さいなら、他の駒にまだ可能性があるのでコンティニューします。
-
-                    if number_of_pieces < target_piece.count_ones() {
-                        continue;
-                    }
-
-                    // 可能性を削除する駒の集合を作成します。
-
-                    let mut iter = pieces
+                    let target_indices = pieces
                         .iter()
                         .enumerate()
-                        .filter(|(_, piece)| **piece != target_piece && **piece & target_piece != 0)
-                        .peekable();
+                        .filter_map(|(i, piece)| if *piece & !target == 0 { Some(i) } else { None })
+                        .collect::<ArrayVec<_, 4>>();
 
-                    // 集合が空なら収束（収縮？）は不要なので、コンティニューして続けます。
+                    // 本来の駒の数（どうぶつしょうぎは4種4駒だから立っているビットの数と同じ）と異なるなら、他の駒にまだ可能性があるのでコンティニューします。
 
-                    if iter.peek().is_none() {
+                    if target_indices.len() != target.count_ones() as usize {
                         continue;
                     }
 
-                    // 駒の可能性を削除します。
+                    // 可能性を削除する駒の集合を取得します。
 
-                    for (index, _) in iter {
-                        result.pieces[begin_index + index] &= !(target_piece | target_piece << 4);
+                    let removing_indices = pieces
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(i, piece)| if !target_indices.contains(&i) && *piece & target != 0 { Some(i) } else { None })
+                        .collect::<ArrayVec<_, 4>>();
+
+                    // 集合が空なら収束（収縮？）は不要なので、コンティニューします。
+
+                    if removing_indices.is_empty() {
+                        continue;
+                    }
+
+                    // 他の駒から可能性を削除します。
+
+                    for index in removing_indices {
+                        result.pieces[begin_index + index] &= !(target | target << 4);
                     }
 
                     // 収束（収縮？）で駒の状態が変わったので、外側の無限ループに戻って最初からやり直します。

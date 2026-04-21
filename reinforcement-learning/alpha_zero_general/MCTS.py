@@ -26,6 +26,8 @@ class MCTS():
         self.Es = {}  # stores game.getGameEnded ended for board s
         self.Vs = {}  # stores game.getValidMoves for board s
 
+        self.rng = np.random.default_rng(1234)
+
     def getActionProb(self, canonicalBoard, temp=1):
         """
         This function performs numMCTSSims simulations of MCTS starting from
@@ -43,7 +45,7 @@ class MCTS():
 
         if temp == 0:
             bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
-            bestA = np.random.choice(bestAs)
+            bestA = self.rng.choice(bestAs)
             probs = [0] * len(counts)
             probs[bestA] = 1
             return probs
