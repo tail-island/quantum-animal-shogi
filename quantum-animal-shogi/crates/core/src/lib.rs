@@ -315,11 +315,13 @@ impl Game {
 
                 // 持ち駒から、ライオンの可能性を外します。
 
-                for index in bits(result.ownership)
-                    .filter(|index| result.bit_boards[*index] == 0 && result.pieces[*index] & 0b_0000_1000 != 0 && result.pieces[*index] != 0b_0000_1000)  // ライオンそのものの場合は除外したいので!= 0b_0000_1000。
-                    .collect::<ArrayVec<_, 8>>()
-                {
-                    result.pieces[index] &= !0b_0000_1000;
+                if bits(!result.ownership).filter(|index| result.pieces[*index] & 0b_0000_1000 != 0).count() >= 1 {
+                    for index in bits(result.ownership)
+                        .filter(|index| result.bit_boards[*index] == 0 && result.pieces[*index] & 0b_0000_1000 != 0)
+                        .collect::<ArrayVec<_, 8>>()
+                    {
+                        result.pieces[index] &= !0b_0000_1000;
+                    }
                 }
 
                 // 持ち駒の状態が変更されたので、「使い切り」による収束（収縮？）を実施します。
@@ -368,7 +370,11 @@ impl Game {
     // ライオンがキャッチされたか、合法種がなくなって負けたかを取得します。
 
     pub fn lost(state: &State) -> bool {
-        bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000) || Game::legal_actions(state).count() == 0
+        if !bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000) && Game::legal_actions(state).count() == 0 {
+            println!("{}", state);
+        }
+
+        bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)
     }
 
     // 手数が256手になって引き分けになったかを取得します。「千日手」はStateが大きくなってしまうので、実装していません。
