@@ -1,5 +1,3 @@
-import numpy as np
-
 from copy import copy
 
 from ..Game import Game
@@ -13,20 +11,10 @@ class QuantumAnimalShogiGame(Game):
     def _get_next_env(self, env, action):
         env_prime = copy(env)
         env_prime.step(action)
-        # if env_prime.step(action) == -1:
-        #     if not env_prime.won() and not env_prime.lost() and not env_prime.draw():
-        #         pass
-        #         # print("???")
         return env_prime
 
     def _get_action_mask(self, env):
-        result = env.observe()["action_mask"]
-
-        if np.all(result == 0):
-            print()
-            print(env)
-
-        return result
+        return env.observe()["action_mask"]
 
     def _get_game_ended(self, env):
         if env.won():
