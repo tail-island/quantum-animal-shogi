@@ -370,10 +370,6 @@ impl Game {
     // ライオンがキャッチされたか、合法種がなくなって負けたかを取得します。
 
     pub fn lost(state: &State) -> bool {
-        if !bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000) && Game::legal_actions(state).count() == 0 {
-            println!("{}", state);
-        }
-
         bits(!state.ownership).any(|index| state.bit_boards[index] == 0 && state.pieces[index] == 0b_0000_1000)
     }
 
