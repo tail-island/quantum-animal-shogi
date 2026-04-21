@@ -131,7 +131,7 @@ def get_action(observation):
 # 自己対戦させてみます。
 
 if __name__ == "__main__":
-    from adapter import execute
+    from quantum_animal_shogi.adapter import execute
 
     # 何らかの識別子をログ出力しておくと、事務局がステージングで失敗したときに文句を言えるので便利です。
 
