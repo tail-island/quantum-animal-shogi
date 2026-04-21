@@ -12,9 +12,11 @@ class QuantumAnimalShogiGame(Game):
 
     def _get_next_env(self, env, action):
         env_prime = copy(env)
-        if env_prime.step(action) == -1:
-            if not env_prime.won() and not env_prime.lost() and not env_prime.draw():
-                print("???")
+        env_prime.step(action)
+        # if env_prime.step(action) == -1:
+        #     if not env_prime.won() and not env_prime.lost() and not env_prime.draw():
+        #         pass
+        #         # print("???")
         return env_prime
 
     def _get_action_mask(self, env):

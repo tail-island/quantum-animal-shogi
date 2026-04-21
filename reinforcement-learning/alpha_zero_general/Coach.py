@@ -66,10 +66,6 @@ class Coach():
 
             r = self.game.getGameEnded(board, self.curPlayer)
 
-            if r == 0 and np.all(board.observe()["action_mask"] == 0):
-                for x in trainExamples:
-                    print(x[0].render())
-
             if r != 0:
                 return [(x[0], x[2], r * ((-1) ** (x[1] != self.curPlayer))) for x in trainExamples]
 
