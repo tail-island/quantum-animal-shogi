@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-python -m quantum_animal_shogi.game "sample-player/run" "reinforcement-learning/run" > game.log
-
-# python -m quantum_animal_shogi.game "reinforcement-learning/run" "sample-player/run" > game.log
