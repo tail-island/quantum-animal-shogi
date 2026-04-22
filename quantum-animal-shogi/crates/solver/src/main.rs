@@ -5,7 +5,7 @@ use itertools::Itertools;
 use quantum_animal_shogi_core::{Game, State, bits};
 
 
-// 以下を参照して作成しました。ちなみに結果は「メモリ不足で失敗」です。。。
+// 以下を参照して作成しました。ちなみに結果は「メモリ不足で失敗」です。。。速攻で諦めたので、確認が不十分です。バグがあったらごめんなさい。。。
 //
 // [「どうぶつしょうぎ」の完全解析](https://www.tanaka.ecc.u-tokyo.ac.jp/ktanaka/dobutsushogi/animal-private.pdf)
 

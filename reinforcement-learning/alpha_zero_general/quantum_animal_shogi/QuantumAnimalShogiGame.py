@@ -24,7 +24,7 @@ class QuantumAnimalShogiGame(Game):
             return -1
 
         if env.draw():
-            return -1e-7  # ルール上は-0.5だけど、学習がゆがみそうなので小さな値にしておきます。
+            return -0.5  # 学習がゆがみそうだけど、とりあえず無視で。
 
         return 0
 
