@@ -7,7 +7,7 @@ from . import Environment
 
 
 IMAGE_SIZE = 64
-TIMEOUT = 30
+TIMEOUT = 40
 
 
 class NumpyArrayEncoder(json.encoder.JSONEncoder):

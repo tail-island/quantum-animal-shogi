@@ -118,12 +118,10 @@ def get_action(observation):
 
     # ログは、標準エラー出力に出力してください。
 
-    print(f"{action}\t{alpha}", file=sys.stderr)
+    print(f"{observation['turn'] + 1}\t{action}\t{alpha}", file=sys.stderr)
 
     return action
 
-
-# 自己対戦させてみます。
 
 if __name__ == "__main__":
     from quantum_animal_shogi.adapter import execute

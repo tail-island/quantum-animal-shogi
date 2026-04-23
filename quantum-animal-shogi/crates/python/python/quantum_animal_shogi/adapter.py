@@ -3,9 +3,12 @@ import numpy as np
 import sys
 
 
-def execute(get_action_fn):
+def execute(get_action_fn, debug=False):
     while True:
         request = json.loads(input())
+
+        if debug:
+            print(request, file=sys.stderr)
 
         match request["command"]:
             case "get_action":
