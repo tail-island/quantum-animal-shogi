@@ -55,11 +55,17 @@ def alpha_beta(raw_env, depth, alpha, beta):
         return float_info.max, None
         # return  1_000 + depth, None  # こちらだと、遠回りせずに勝ちにいきます。βカットの効率は落ちると思うけど。。。
 
-    # 負けもしくは引き分けなら（終端ノードなら）最小スコアを返します。
+    # 負けなら（終端ノードなら）最小スコアを返します。
 
-    if raw_env.lost() or raw_env.draw():
+    if raw_env.lost():  # or raw_env.draw():
         return -float_info.max, None
         # return -1_000 - depth, None  # こちらだと、負けをできるだけ遠ざけます。βカットの効率は落ちると思うけど。。。
+
+    # 引き分けなら（終端ノードなら）最小スコア+1を返します。
+
+    if raw_env.draw():
+        return -float_info.max / 2, None
+        # return -500, None
 
     # 観測を実施します。
 

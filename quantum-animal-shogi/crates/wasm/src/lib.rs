@@ -121,8 +121,12 @@ fn alpha_beta(state: &State_, depth: i32, alpha: i32, beta: i32) -> (i32, Option
         return ( 1_000 + depth, None)
     }
 
-    if Game::lost(state) || Game::draw(state) {
+    if Game::lost(state) {
         return (-1_000 - depth, None)
+    }
+
+    if Game::draw(state) {
+        return ( -500, None)
     }
 
     if depth == 0 {
