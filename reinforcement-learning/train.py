@@ -6,7 +6,7 @@ from alpha_zero_general.quantum_animal_shogi import QuantumAnimalShogiGame, Quan
 
 
 args = dotdict({
-    "numIters": 1_000,
+    "numIters": 100,
     "numEps": 500,             # Number of complete self-play games to simulate during a new iteration.
     "tempThreshold": 15,       #
     "updateThreshold": 0.6,    # During arena playoff, new neural net will be accepted if threshold or more of games are won.
