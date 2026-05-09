@@ -6,6 +6,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import wasm from 'vite-plugin-wasm'
 
 export default defineConfig({
+  base: './',
   plugins: [
     vue(),
     vueDevTools(),
