@@ -19,6 +19,7 @@ function* getBits(x: number): Iterable<number> {
 
 export const useQuantumAnimalShogiStore = defineStore('state', () => {
   const state        = ref(getInitialState())
+  const depth        = ref(8)
   const isMyTurn     = ref(true)
   const reward       = ref(0)
   const action0      = ref<number | null>(null)
@@ -86,6 +87,8 @@ export const useQuantumAnimalShogiStore = defineStore('state', () => {
 
   const reset = () => {
     state.value = getInitialState()
+    isMyTurn.value = true
+    reward.value = 0
   }
 
   const step = async (action: Action) => {
@@ -120,12 +123,12 @@ export const useQuantumAnimalShogiStore = defineStore('state', () => {
       return
     }
 
-    await step(getAction(state.value))
+    await step(getAction(state.value, depth.value))
 
     if (reward.value != 0) {
       return
     }
   }
 
-  return { initialize, isMyTurn, reward, action0, action1, animalImages, board, allyHands, enemyHands, legalActions, reset, executeAction }
+  return { initialize, isMyTurn, depth, reward, action0, action1, animalImages, board, allyHands, enemyHands, legalActions, reset, executeAction }
 })

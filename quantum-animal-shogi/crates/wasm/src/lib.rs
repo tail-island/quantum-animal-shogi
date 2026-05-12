@@ -114,8 +114,6 @@ fn get_score(state: &State_) -> i32 {
     ally_piece_advantage_score - enemy_piece_advantage_score
 }
 
-const MAX_DEPTH: i32 = 8;
-
 fn alpha_beta(state: &State_, depth: i32, alpha: i32, beta: i32) -> (i32, Option<(u8, u8)>) {
     if Game::won(state) {
         return ( 1_000 + depth, None)
@@ -154,6 +152,6 @@ fn alpha_beta(state: &State_, depth: i32, alpha: i32, beta: i32) -> (i32, Option
 }
 
 #[wasm_bindgen(js_name = getAction)]
-pub fn get_action(state: &State) -> Action {
-    alpha_beta(&state.state, MAX_DEPTH, -9_999, 9_999).1.unwrap().into()
+pub fn get_action(state: &State, depth: i32) -> Action {
+    alpha_beta(&state.state, depth, -9_999, 9_999).1.unwrap().into()
 }

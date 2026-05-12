@@ -3,6 +3,8 @@ import { useQuantumAnimalShogiStore } from '@/stores/QuantumAnimalShogiStore'
 import PieceCell from './PieceCell.vue'
 
 const store = useQuantumAnimalShogiStore()
+
+const depthOptions = [1, 2, 3, 4, 5, 6, 7, 8]
 </script>
 
 <template>
@@ -47,7 +49,17 @@ const store = useQuantumAnimalShogiStore()
     <div class="cell piece-cell hand-cell" ><PieceCell :piece-state="store.allyHands[0]!"  :index="12"   /></div>
     <div class="cell piece-cell hand-cell" ><PieceCell :piece-state="store.allyHands[1]!"  :index="13"   /></div>
   </div>
-  <p class="reward" v-if="store.reward">reward = {{ store.reward }}</p>
+  <p class="control">
+    探索の深さ&nbsp;=&nbsp;
+    <select v-model="store.depth">
+      <option v-for="depthOption in depthOptions" :key="depthOption" :value="depthOption">
+        {{ depthOption }}
+      </option>
+    </select>
+    ,&nbsp;
+    reward&nbsp;=&nbsp;{{ store.reward }},&nbsp;
+    <button @click="store.reset()">リセット</button>
+  </p>
 </template>
 
 <style scoped>
@@ -77,7 +89,7 @@ const store = useQuantumAnimalShogiStore()
   border: 1px solid #c0c0c0;
 }
 
-.reward {
+.control {
   text-align: center;;
 }
 </style>
